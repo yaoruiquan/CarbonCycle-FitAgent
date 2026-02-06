@@ -51,12 +51,10 @@ app/logs/
 *.swo
 *~
 
-# Project Data (ignore databases and vector stores)
-data/chroma/
-data/qdrant/
-data/vector_store/
-*.db
-*.sqlite
+# Project Data (ignore databases, vector stores, uploads, and test data)
+data/
+!data/knowledge/
+data/knowledge/
 
 # OS
 .DS_Store
@@ -74,3 +72,6 @@ frontend/node_modules/
 
 # Dependencies
 node_modules/
+
+# Tests
+tests/
