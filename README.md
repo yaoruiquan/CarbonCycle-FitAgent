@@ -64,16 +64,49 @@ graph LR
 ### 📂 项目结构
 ```
 CarbonCycle-FitAgent/
-├── app/                    # 🔧 后端核心 (FastAPI + LangGraph)
-│   ├── agent/              #   智能体状态机 (Planner-Actor-Reflector-Adjuster)
-│   ├── api/                #   RESTful API 路由
-│   ├── services/           #   业务逻辑 (策略计算、分析引擎)
-│   └── llm/                #   LLM 客户端与工具集成
-├── frontend/               # 🎨 前端应用 (Next.js + React)
-│   ├── src/app/            #   页面路由 (Dashboard, Strategy, Chat)
-│   └── src/components/     #   UI 组件 (shadcn/ui)
-├── data/                   # 💾 数据存储 (SQLite, Knowledge Base)
-└── progress/               # 📝 开发进度文档
+├── app/                          # 🔧 后端核心 (FastAPI + LangGraph)
+│   ├── agent/                    #   智能体架构
+│   │   ├── nodes/                #     Agent 节点 (Planner, Actor, Reflector, Adjuster)
+│   │   ├── graph.py              #     LangGraph 图定义
+│   │   ├── router.py             #     路由逻辑
+│   │   └── state.py              #     状态定义
+│   ├── api/                      #   RESTful API 路由
+│   │   ├── auth.py               #     认证接口
+│   │   ├── chat.py               #     对话接口
+│   │   ├── plan.py               #     计划接口
+│   │   ├── report.py             #     报告接口
+│   │   └── user.py               #     用户接口
+│   ├── db/                       #   数据库层
+│   │   ├── models.py             #     SQLAlchemy 模型
+│   │   ├── db_storage.py         #     存储实现
+│   │   └── repositories/         #     数据访问层
+│   ├── llm/                      #   LLM 集成
+│   │   ├── client.py             #     OpenAI 兼容客户端
+│   │   └── tools.py              #     Agent 工具
+│   ├── rag/                      #   RAG 检索增强
+│   │   ├── embedding.py          #     向量嵌入
+│   │   ├── retriever.py          #     检索器
+│   │   └── vectorstore.py        #     向量存储
+│   ├── services/                 #   业务服务
+│   │   ├── carbon_strategy.py    #     碳循环策略
+│   │   ├── execution_analysis.py #     执行分析
+│   │   ├── adjustment_engine.py  #     调整引擎
+│   │   └── report_service.py     #     报告生成
+│   ├── memory/                   #   记忆系统
+│   │   ├── agent_memory.py       #     Agent 记忆
+│   │   └── user_memory.py        #     用户记忆
+│   ├── core/                     #   核心配置
+│   │   ├── config.py             #     配置管理
+│   │   ├── database.py           #     数据库连接
+│   │   └── scheduler.py          #     任务调度
+│   └── models/                   #   数据模型
+│       ├── user.py               #     用户模型
+│       ├── plan.py               #     计划模型
+│       └── log.py                #     日志模型
+├── frontend/                     # 🎨 前端应用 (Next.js + React)
+│   ├── src/app/                 #   页面路由
+│   └── src/components/          #   UI 组件
+└── data/                        # 💾 数据存储 (SQLite, Knowledge Base)
 ```
 
 ---
