@@ -1,0 +1,119 @@
+/* Import Plus Jakarta Sans for a modern, tech feel */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+@import "tailwindcss";
+
+@config "../../tailwind.config.ts";
+
+@layer base {
+  :root {
+    /* Organic Tech Palette */
+    --background: #F7F7F2;
+    /* Warm Cream */
+    --foreground: #1A2E29;
+    /* Dark Emerald Tint */
+
+    --card: rgba(255, 255, 255, 0.65);
+    --card-foreground: #1A2E29;
+
+    --popover: #FFFFFF;
+    --popover-foreground: #1A2E29;
+
+    --primary: #065F46;
+    /* Deep Emerald */
+    --primary-foreground: #FFFFFF;
+
+    --secondary: #E2E8E4;
+    /* Sage Tint */
+    --secondary-foreground: #064E3B;
+
+    --muted: rgba(6, 95, 70, 0.05);
+    --muted-foreground: #64748B;
+
+    --accent: #F97316;
+    /* Vibrant Orange */
+    --accent-foreground: #FFFFFF;
+
+    --destructive: #EF4444;
+    --destructive-foreground: #FFFFFF;
+
+    --border: rgba(6, 95, 70, 0.1);
+    --input: rgba(6, 95, 70, 0.1);
+    --ring: rgba(6, 95, 70, 0.2);
+
+    --radius: 1.5rem;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    @apply font-sans antialiased overflow-hidden;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    background-image: url('/images/bg-texture.png');
+    background-size: cover;
+    background-position: center;
+    background-blend-mode: overlay;
+  }
+}
+
+@layer components {
+
+  /* Glassmorphism Card utility */
+  .glass-card {
+    @apply bg-white/60 backdrop-blur-xl border border-white/40 shadow-xl rounded-3xl transition-all duration-300;
+  }
+
+  .glass-card:hover {
+    @apply bg-white/80 shadow-2xl scale-[1.02] border-white/60;
+  }
+
+  /* Bento Grid Layout Utilities */
+  .bento-grid {
+    @apply grid gap-4 p-4 h-[calc(100vh-5rem)] w-full;
+  }
+
+  /* Custom Scrollbar for inner content */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* Animations */
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(6, 95, 70, 0.2);
+  }
+
+  50% {
+    box-shadow: 0 0 20px 0 rgba(6, 95, 70, 0.4);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s infinite;
+}
