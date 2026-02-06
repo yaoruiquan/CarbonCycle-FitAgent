@@ -1,0 +1,41 @@
+[
+  {
+    "id": "u001",
+    "name": "张伟",
+    "gender": "male",
+    "birth_date": "1990-05-15",
+    "height_cm": 175,
+    "weight_kg": 78,
+    "target_weight_kg": 72,
+    "goal": "fat_loss",
+    "activity_level": "moderate",
+    "training_days_per_week": 4,
+    "dietary_preferences": ["无辣", "少油"]
+  },
+  {
+    "id": "u002",
+    "name": "李娜",
+    "gender": "female",
+    "birth_date": "1995-08-22",
+    "height_cm": 165,
+    "weight_kg": 58,
+    "target_weight_kg": 55,
+    "goal": "recomposition",
+    "activity_level": "active",
+    "training_days_per_week": 5,
+    "dietary_preferences": ["素食优先"]
+  },
+  {
+    "id": "u003",
+    "name": "王刚",
+    "gender": "male",
+    "birth_date": "1988-12-01",
+    "height_cm": 180,
+    "weight_kg": 85,
+    "target_weight_kg": 90,
+    "goal": "muscle_gain",
+    "activity_level": "very_active",
+    "training_days_per_week": 6,
+    "dietary_preferences": ["高蛋白"]
+  }
+]
