@@ -53,13 +53,19 @@ graph LR
         Agent --> Reflector
         Agent --> Adjuster
     end
-    
+
     subgraph "Data & Intelligence"
         Services --> DB[(SQLite/Postgres)]
         Services --> VectorDB[(ChromaDB/Qdrant)]
         Agent --> LLM[Qwen/OpenAI Models]
     end
 ```
+
+### 🎨 前端界面预览
+
+| 饮食记录页面 | 智能对话页面 |
+|------------|------------|
+| ![饮食记录](./images/ScreenShot_2026-02-06_162301_011.png) | ![AI对话](./images/ScreenShot_2026-02-06_162518_870.png) |
 
 ### 📂 项目结构
 ```
