@@ -7,7 +7,7 @@ Handles database operations for diet logs.
 """
 
 from datetime import date, time
-from typing import Optional
+from typing import Optional, Union
 from uuid import UUID
 
 from sqlalchemy import select, func
@@ -69,7 +69,7 @@ class LogRepository:
         await self.session.flush()
         return log
     
-    async def get_by_id(self, log_id: UUID | str) -> Optional[DietLog]:
+    async def get_by_id(self, log_id: Union[UUID, str]) -> Optional[DietLog]:
         """Get log by ID with meals."""
         result = await self.session.execute(
             select(LogModel)
@@ -81,7 +81,7 @@ class LogRepository:
         db_log = result.scalar_one_or_none()
         return self._to_pydantic(db_log) if db_log else None
     
-    async def get_user_logs(self, user_id: UUID | str, limit: int = 7) -> list[DietLog]:
+    async def get_user_logs(self, user_id: Union[UUID, str], limit: int = 7) -> list[DietLog]:
         """Get recent logs for a user."""
         result = await self.session.execute(
             select(LogModel)
@@ -94,7 +94,7 @@ class LogRepository:
         )
         return [self._to_pydantic(l) for l in result.scalars().all()]
     
-    async def get_by_date(self, user_id: UUID | str, log_date: date) -> Optional[DietLog]:
+    async def get_by_date(self, user_id: Union[UUID, str], log_date: date) -> Optional[DietLog]:
         """Get log for a specific date."""
         result = await self.session.execute(
             select(LogModel)
@@ -106,7 +106,7 @@ class LogRepository:
         db_log = result.scalar_one_or_none()
         return self._to_pydantic(db_log) if db_log else None
     
-    async def update(self, log_id: UUID | str, **updates) -> Optional[DietLog]:
+    async def update(self, log_id: Union[UUID, str], **updates) -> Optional[DietLog]:
         """Update log fields."""
         result = await self.session.execute(
             select(LogModel).where(LogModel.id == str(log_id))
@@ -122,7 +122,7 @@ class LogRepository:
         await self.session.flush()
         return await self.get_by_id(log_id)
     
-    async def delete(self, log_id: UUID | str) -> bool:
+    async def delete(self, log_id: Union[UUID, str]) -> bool:
         """Delete a log."""
         result = await self.session.execute(
             select(LogModel).where(LogModel.id == str(log_id))
@@ -135,7 +135,7 @@ class LogRepository:
         await self.session.flush()
         return True
     
-    async def get_stats(self, user_id: UUID | str, days: int = 7) -> dict:
+    async def get_stats(self, user_id: Union[UUID, str], days: int = 7) -> dict:
         """Get log statistics for a user."""
         logs = await self.get_user_logs(user_id, limit=days)
         

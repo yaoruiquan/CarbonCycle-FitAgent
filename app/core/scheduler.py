@@ -8,7 +8,7 @@ Uses APScheduler for periodic tasks like weekly report generation.
 
 from collections.abc import Callable, Coroutine
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -18,7 +18,7 @@ from app.core.logging import get_logger
 logger = get_logger(__name__)
 
 # Global scheduler instance
-_scheduler: AsyncIOScheduler | None = None
+_scheduler: Optional[AsyncIOScheduler] = None
 
 # Task type alias
 ScheduledTask = Callable[[], Coroutine[Any, Any, None]]
@@ -139,7 +139,7 @@ def stop_scheduler() -> None:
         _scheduler = None
 
 
-def get_next_run_time(task_id: str) -> datetime | None:
+def get_next_run_time(task_id: str) -> Optional[datetime]:
     """
     Get the next scheduled run time for a task.
     

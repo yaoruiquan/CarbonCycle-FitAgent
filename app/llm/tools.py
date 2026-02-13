@@ -8,7 +8,7 @@ Note: Tool implementations are in services layer, not here.
 注意：工具实现在服务层，而非此处
 """
 
-from typing import Any
+from typing import Any, Optional
 
 # Tool name constants
 TOOL_CALCULATE_MACROS = "calculate_macros"
@@ -177,7 +177,7 @@ AVAILABLE_TOOLS = {
 }
 
 
-def get_tool_definitions(tool_names: list[str] | None = None) -> list[dict[str, Any]]:
+def get_tool_definitions(tool_names: Optional[list[str]] = None) -> list[dict[str, Any]]:
     """
     Get tool definitions for function calling.
     

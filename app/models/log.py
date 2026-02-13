@@ -188,3 +188,37 @@ class LogUpdate(BaseModel):
     mood: Optional[int] = Field(None, ge=1, le=5)
     energy_level: Optional[int] = Field(None, ge=1, le=5)
     sleep_hours: Optional[float] = Field(None, ge=0, le=24)
+
+
+class WeightLog(BaseModel):
+    """
+    Weight tracking record.
+    体重记录模型
+    
+    Attributes:
+        id: Unique record identifier.
+        user_id: Associated user identifier.
+        date: Date of the measurement.
+        weight_kg: Body weight in kilograms.
+        body_fat_pct: Body fat percentage (optional).
+        notes: Additional notes.
+        created_at: Record creation timestamp.
+    """
+    
+    id: UUID = Field(default_factory=uuid4)
+    user_id: UUID
+    date: date
+    weight_kg: float = Field(..., gt=30, lt=300)
+    body_fat_pct: Optional[float] = Field(None, ge=1, le=60)
+    notes: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.now)
+
+
+class WeightLogCreate(BaseModel):
+    """Schema for creating a new weight log."""
+    
+    user_id: UUID
+    date: date
+    weight_kg: float = Field(..., gt=30, lt=300)
+    body_fat_pct: Optional[float] = Field(None, ge=1, le=60)
+    notes: Optional[str] = None

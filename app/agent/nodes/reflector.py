@@ -9,7 +9,7 @@ Enhanced with multi-day trend analysis and LLM insights.
 增强了多日趋势分析和 LLM 洞察
 """
 
-from typing import Any
+from typing import Any, Optional
 
 from app.agent.state import AgentState, ReflectionResult
 from app.core.logging import get_logger, log_agent_decision
@@ -102,7 +102,7 @@ def _analyze_trends(logs: list[Any]) -> dict[str, Any]:
 
 async def _generate_reflection_summary(
     reflection: ReflectionResult,
-    trends: dict[str, Any] | None,
+    trends: Optional[dict[str, Any]],
     plan: dict[str, Any],
 ) -> str:
     """

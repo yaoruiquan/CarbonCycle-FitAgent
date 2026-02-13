@@ -108,3 +108,6 @@ class AgentState(TypedDict, total=False):
     
     # Messages for LLM context
     messages: list[dict[str, str]]
+    
+    # Database session for tool execution
+    db_session: Optional[Any]

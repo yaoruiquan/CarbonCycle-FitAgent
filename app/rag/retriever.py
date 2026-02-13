@@ -13,7 +13,7 @@ Features:
 import re
 import math
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, Union
 from collections import defaultdict
 
 from app.core.config import get_settings
@@ -141,7 +141,7 @@ class BM25Index:
 # 使用 Unstructured 的文档加载器
 # ============================================================
 
-def load_markdown_documents(file_path: str | Path) -> list[dict[str, Any]]:
+def load_markdown_documents(file_path: Union[str, Path]) -> list[dict[str, Any]]:
     """
     Load and parse markdown file using Unstructured.
     使用 Unstructured 加载和解析 Markdown 文件
@@ -183,7 +183,7 @@ def load_markdown_documents(file_path: str | Path) -> list[dict[str, Any]]:
     return documents
 
 
-def load_knowledge_directory(knowledge_dir: str | Path) -> list[dict[str, Any]]:
+def load_knowledge_directory(knowledge_dir: Union[str, Path]) -> list[dict[str, Any]]:
     """
     Load all markdown files from a directory.
     从目录加载所有 Markdown 文件

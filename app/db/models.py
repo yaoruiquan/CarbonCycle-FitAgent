@@ -63,6 +63,7 @@ class UserModel(Base):
     # Relationships
     plans = relationship("PlanModel", back_populates="user", cascade="all, delete-orphan")
     logs = relationship("LogModel", back_populates="user", cascade="all, delete-orphan")
+    weight_logs = relationship("WeightLogModel", back_populates="user", cascade="all, delete-orphan")
     
     def to_pydantic(self):
         """Convert to Pydantic model."""
@@ -278,4 +279,22 @@ class ChatMessageModel(Base):
             metadata=self.metadata_json or {},
             timestamp=self.timestamp,
         )
+
+
+class WeightLogModel(Base):
+    """SQLAlchemy model for weight logs. 体重记录 ORM 模型"""
+    
+    __tablename__ = "weight_logs"
+    
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    date = Column(Date, nullable=False)
+    weight_kg = Column(Float, nullable=False)
+    body_fat_pct = Column(Float, nullable=True)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.now)
+    
+    # Relationships
+    user = relationship("UserModel", back_populates="weight_logs")
+
 

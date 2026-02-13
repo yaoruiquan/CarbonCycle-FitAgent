@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Optional
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
@@ -31,12 +31,12 @@ class AgentResultResponse(BaseModel):
     """Detailed agent result."""
     run_id: str
     status: str
-    planner_output: dict[str, Any] | None = None
-    reflection: dict[str, Any] | None = None
-    adjustment: dict[str, Any] | None = None
-    reflection_summary: str | None = None
-    motivation: str | None = None
-    error: str | None = None
+    planner_output: Optional[dict[str, Any]] = None
+    reflection: Optional[dict[str, Any]] = None
+    adjustment: Optional[dict[str, Any]] = None
+    reflection_summary: Optional[str] = None
+    motivation: Optional[str] = None
+    error: Optional[str] = None
 
 
 # Store for async results

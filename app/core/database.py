@@ -8,6 +8,7 @@ Provides async SQLAlchemy engine and session factory.
 
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from typing import Optional
 
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -26,8 +27,8 @@ class Base(DeclarativeBase):
 
 
 # Global engine instance (initialized on first use)
-_engine: AsyncEngine | None = None
-_session_factory: async_sessionmaker[AsyncSession] | None = None
+_engine: Optional[AsyncEngine] = None
+_session_factory: Optional[async_sessionmaker[AsyncSession]] = None
 
 
 def get_engine() -> AsyncEngine:

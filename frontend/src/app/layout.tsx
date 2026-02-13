@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { UserProvider } from "@/lib/context/UserContext";
 import { userStorage } from "@/lib/storage";
 import "./globals.css";
 
@@ -47,7 +46,6 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body className="h-screen w-screen overflow-hidden">
-        <UserProvider>
           <div className="relative h-full w-full flex flex-col">
             {/* Main Content Area */}
             <main className="flex-1 w-full h-full relative z-0">
@@ -94,7 +92,6 @@ export default function RootLayout({
               </div>
             )}
           </div>
-        </UserProvider>
       </body>
     </html>
   );

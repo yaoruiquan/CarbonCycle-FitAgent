@@ -10,13 +10,13 @@ import logging
 import sys
 from contextvars import ContextVar
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Optional
 
 from app.core.config import get_settings
 
 # Context variables for request/agent tracing
-request_id_var: ContextVar[str | None] = ContextVar("request_id", default=None)
-agent_run_id_var: ContextVar[str | None] = ContextVar("agent_run_id", default=None)
+request_id_var: ContextVar[Optional[str]] = ContextVar("request_id", default=None)
+agent_run_id_var: ContextVar[Optional[str]] = ContextVar("agent_run_id", default=None)
 
 
 class StructuredFormatter(logging.Formatter):
@@ -107,7 +107,7 @@ def log_agent_decision(
     node: str,
     decision: str,
     reasoning: str,
-    context: dict[str, Any] | None = None,
+    context: Optional[dict[str, Any]] = None,
 ) -> None:
     """
     Log an Agent decision for auditing purposes.

@@ -6,7 +6,7 @@ Handles database operations for users.
 处理用户的数据库操作
 """
 
-from typing import Optional
+from typing import Optional, Union
 from uuid import UUID
 
 from sqlalchemy import select, delete
@@ -29,7 +29,7 @@ class UserRepository:
         await self.session.flush()
         return db_user.to_pydantic()
     
-    async def get_by_id(self, user_id: UUID | str) -> Optional[UserProfile]:
+    async def get_by_id(self, user_id: Union[UUID, str]) -> Optional[UserProfile]:
         """Get user by ID."""
         result = await self.session.execute(
             select(UserModel).where(UserModel.id == str(user_id))
@@ -45,7 +45,7 @@ class UserRepository:
         db_user = result.scalar_one_or_none()
         return db_user.to_pydantic() if db_user else None
     
-    async def update(self, user_id: UUID | str, **updates) -> Optional[UserProfile]:
+    async def update(self, user_id: Union[UUID, str], **updates) -> Optional[UserProfile]:
         """Update user fields."""
         result = await self.session.execute(
             select(UserModel).where(UserModel.id == str(user_id))
@@ -64,7 +64,7 @@ class UserRepository:
         await self.session.flush()
         return db_user.to_pydantic()
     
-    async def delete(self, user_id: UUID | str) -> bool:
+    async def delete(self, user_id: Union[UUID, str]) -> bool:
         """Delete user and cascade to related data."""
         result = await self.session.execute(
             select(UserModel).where(UserModel.id == str(user_id))

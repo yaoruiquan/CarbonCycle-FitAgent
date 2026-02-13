@@ -7,7 +7,7 @@ Handles database operations for carbon cycle plans.
 """
 
 from datetime import date
-from typing import Optional
+from typing import Optional, Union
 from uuid import UUID
 
 from sqlalchemy import select, update
@@ -59,7 +59,7 @@ class PlanRepository:
         await self.session.flush()
         return plan
     
-    async def get_by_id(self, plan_id: UUID | str) -> Optional[CarbonCyclePlan]:
+    async def get_by_id(self, plan_id: Union[UUID, str]) -> Optional[CarbonCyclePlan]:
         """Get plan by ID with days."""
         result = await self.session.execute(
             select(PlanModel)
@@ -69,7 +69,7 @@ class PlanRepository:
         db_plan = result.scalar_one_or_none()
         return self._to_pydantic(db_plan) if db_plan else None
     
-    async def get_user_plans(self, user_id: UUID | str) -> list[CarbonCyclePlan]:
+    async def get_user_plans(self, user_id: Union[UUID, str]) -> list[CarbonCyclePlan]:
         """Get all plans for a user."""
         result = await self.session.execute(
             select(PlanModel)
@@ -78,7 +78,7 @@ class PlanRepository:
         )
         return [self._to_pydantic(p) for p in result.scalars().all()]
     
-    async def get_active_plan(self, user_id: UUID | str) -> Optional[CarbonCyclePlan]:
+    async def get_active_plan(self, user_id: Union[UUID, str]) -> Optional[CarbonCyclePlan]:
         """Get active plan for a user."""
         result = await self.session.execute(
             select(PlanModel)
@@ -88,7 +88,7 @@ class PlanRepository:
         db_plan = result.scalar_one_or_none()
         return self._to_pydantic(db_plan) if db_plan else None
     
-    async def deactivate_user_plans(self, user_id: UUID | str) -> None:
+    async def deactivate_user_plans(self, user_id: Union[UUID, str]) -> None:
         """Deactivate all plans for a user."""
         await self.session.execute(
             update(PlanModel)
@@ -96,7 +96,7 @@ class PlanRepository:
             .values(is_active=False)
         )
     
-    async def delete(self, plan_id: UUID | str) -> bool:
+    async def delete(self, plan_id: Union[UUID, str]) -> bool:
         """Delete a plan."""
         result = await self.session.execute(
             select(PlanModel).where(PlanModel.id == str(plan_id))
@@ -109,7 +109,7 @@ class PlanRepository:
         await self.session.flush()
         return True
     
-    async def update(self, plan_id: UUID | str, **updates) -> Optional[CarbonCyclePlan]:
+    async def update(self, plan_id: Union[UUID, str], **updates) -> Optional[CarbonCyclePlan]:
         """Update a plan and its days."""
         result = await self.session.execute(
             select(PlanModel).options(selectinload(PlanModel.days)).where(PlanModel.id == str(plan_id))

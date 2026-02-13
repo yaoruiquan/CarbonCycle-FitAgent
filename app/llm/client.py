@@ -13,7 +13,7 @@ import base64
 from enum import Enum
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 from openai import AsyncOpenAI
 
@@ -83,7 +83,7 @@ class LLMClient:
         temperature: Optional[float] = None,
         max_tokens: Optional[int] = None,
         tools: Optional[list[dict[str, Any]]] = None,
-        tool_choice: Optional[str | dict[str, Any]] = None,
+        tool_choice: Optional[Union[str, dict[str, Any]]] = None,
     ) -> dict[str, Any]:
         """
         Send chat completion request.
@@ -180,7 +180,7 @@ class LLMClient:
     
     async def analyze_image(
         self,
-        image_path: str | Path,
+        image_path: Union[str, Path],
         prompt: str,
         system_prompt: Optional[str] = None,
     ) -> dict[str, Any]:
