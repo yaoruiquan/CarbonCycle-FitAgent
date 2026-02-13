@@ -48,3 +48,7 @@ python-dotenv>=1.0.0
 # Utilities
 emoji>=2.8.0
 loguru>=0.7.0
+
+# Evaluation - Agent Performance Evaluation
+datasets>=2.14.0
+bfcl-eval>=1.0.0

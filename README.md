@@ -171,8 +171,13 @@ npm run dev
 
 ---
 
-## 📅 最近更新 (Recent Updates 1.30 - 2.5)
+## 📅 最近更新 (Recent Updates 1.30 - 2.13)
 
+*   **2026-02-13**:
+    *   ✅ **Agent 评估体系上线**: 基于 BFCL/GAIA 标准的智能体性能评估框架。
+    *   ✅ **BFCL 工具调用评估**: 使用 AST 匹配算法评估函数调用能力。
+    *   ✅ **GAIA 通用能力评估**: 使用准精确匹配评估 AI 助手综合能力。
+    *   ✅ **数据生成质量评估**: 支持 LLM Judge 和 Win Rate 评估方法。
 *   **2026-02-05**:
     *   ✅ **AI 周报功能上线**: 基于 Agent 的深度周复盘分析。
     *   ✅ **饮食记录增强**: 支持手动输入 + AI 营养估算。
@@ -182,6 +187,91 @@ npm run dev
     *   ✅ **Planner 节点增强**: 引入 LLM 生成个性化的每日训练和饮食描述。
 *   **2026-01-30**:
     *   ✅ **多模型架构**: 完成 Brain (Qwen-Max), Vision (Qwen-VL), Chat (Qwen-Plus) 的多模型配置。
+
+---
+
+## 📊 智能体评估体系 (Agent Evaluation)
+
+本项目集成了基于 **BFCL** 和 **GAIA** 标准的智能体性能评估框架。
+
+### 评估模块结构
+
+```
+app/evaluation/
+├── benchmarks/                  # 评估基准实现
+│   ├── bfcl/                   # BFCL 工具调用评估
+│   │   ├── dataset.py          # 数据集加载器
+│   │   ├── evaluator.py        # AST 匹配评估器
+│   │   └── metrics.py         # 指标计算
+│   ├── gaia/                   # GAIA 通用能力评估
+│   │   ├── dataset.py          # 数据集加载器
+│   │   ├── evaluator.py       # 准精确匹配评估器
+│   │   └── metrics.py         # 指标计算
+│   └── data_generation/        # 数据生成质量评估
+│       ├── llm_judge.py       # LLM Judge 评估器
+│       └── win_rate.py        # Win Rate 评估器
+└── tools/                      # 评估工具封装
+    ├── bfcl_tool.py
+    ├── gaia_tool.py
+    └── data_quality_tool.py
+```
+
+### BFCL 工具调用评估
+
+**BFCL (Berkeley Function Calling Leaderboard)** 评估智能体的工具调用能力，使用 AST 匹配算法。
+
+**评估指标**:
+- 准确率 (Accuracy)
+- 分类准确率 (Category-wise Accuracy)
+- 加权准确率 (Weighted Accuracy)
+- 错误率 (Error Rate)
+
+**评估类别**:
+- `simple_python`: 单函数调用
+- `multiple`: 多函数调用
+- `parallel`: 并行函数调用
+- `irrelevance`: 判断是否需要调用函数
+
+```python
+from app.evaluation.tools import BFCLEvaluationTool
+
+bfcl_tool = BFCLEvaluationTool(category="simple_python")
+results = bfcl_tool.run(agent, max_samples=10)
+print(f"准确率: {results['overall_accuracy']:.2%}")
+```
+
+### GAIA 通用能力评估
+
+**GAIA (General AI Assistants)** 评估智能体在真实世界任务中的综合表现。
+
+**评估指标**:
+- 精确匹配率 (Exact Match Rate)
+- 分级准确率 (Level-wise Accuracy)
+- 难度递进下降率 (Difficulty Progression Drop Rate)
+
+**难度级别**:
+- Level 1: 零步推理
+- Level 2: 1-5步推理
+- Level 3: 5+步推理
+
+```python
+from app.evaluation.tools import GAIAEvaluationTool
+
+gaia_tool = GAIAEvaluationTool(level=2)
+results = gaia_tool.run(agent, max_samples=10)
+print(f"准确率: {results['overall_accuracy']:.2%}")
+```
+
+### 运行评估脚本
+
+```bash
+# 安装评估依赖
+pip install -r requirements.txt
+
+# 运行评估
+python scripts/evaluate_agent.py --benchmark bfcl --samples 10
+python scripts/evaluate_agent.py --benchmark gaia --samples 10 --level 2
+```
 
 ---
 
