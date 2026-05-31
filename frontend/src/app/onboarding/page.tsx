@@ -4,8 +4,36 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { userApi, planApi } from "@/lib/api";
 import { userStorage } from "@/lib/storage";
+import { UserProfile } from "@/lib/types";
 
-const GlassCard = ({ children, className }: any) => (
+type OnboardingGender = UserProfile["gender"];
+type OnboardingGoal = Extract<UserProfile["goal"], "fat_loss" | "muscle_gain" | "maintenance">;
+
+interface OnboardingForm {
+    name: string;
+    gender: OnboardingGender;
+    birthYear: number;
+    height: number;
+    weight: number;
+    targetWeight: number;
+    goal: OnboardingGoal;
+    trainingDays: number;
+}
+
+const numericFields: { l: string; k: keyof Pick<OnboardingForm, "birthYear" | "height" | "weight" | "targetWeight">; p: string }[] = [
+    { l: '出生年份', k: 'birthYear', p: '1995' },
+    { l: '身高 (cm)', k: 'height', p: '175' },
+    { l: '体重 (kg)', k: 'weight', p: '70' },
+    { l: '目标体重 (kg)', k: 'targetWeight', p: '65' }
+];
+
+const goalOptions: { id: OnboardingGoal; icon: string; title: string; desc: string }[] = [
+    { id: 'fat_loss', icon: '🔥', title: '减脂刷脂', desc: '热量缺口，激进循环' },
+    { id: 'muscle_gain', icon: '💪', title: '增肌塑形', desc: '热量盈余，高碳日为主' },
+    { id: 'maintenance', icon: '⚖️', title: '保持健康', desc: '灵活饮食，代谢健康' }
+];
+
+const GlassCard = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
     <div className={`glass-card p-8 animate-in zoom-in-95 duration-500 ${className}`}>
         {children}
     </div>
@@ -23,14 +51,14 @@ export default function OnboardingPage() {
     // Step 2: Profile (Gender, Age, Height, Weight)
     // Step 3: Goal & Plan (Goal, TargetWeight, Frequency)
 
-    const [form, setForm] = useState({
+    const [form, setForm] = useState<OnboardingForm>({
         name: "",
-        gender: "male" as "male" | "female",
+        gender: "male",
         birthYear: 1995,
         height: 175,
         weight: 75,
         targetWeight: 70,
-        goal: "fat_loss" as "fat_loss" | "muscle_gain" | "maintenance",
+        goal: "fat_loss",
         trainingDays: 4,
     });
 
@@ -98,9 +126,9 @@ export default function OnboardingPage() {
             setLoadingText("系统准备就绪!");
             await new Promise(r => setTimeout(r, 500));
             router.push("/");
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error(err);
-            setError(err.message || "生成计划失败，请稍后重试");
+            setError(err instanceof Error ? err.message : "生成计划失败，请稍后重试");
             setLoading(false);
         }
     };
@@ -156,10 +184,10 @@ export default function OnboardingPage() {
 
                                 {/* Gender */}
                                 <div className="flex gap-4 justify-center mb-6">
-                                    {['male', 'female'].map(g => (
+                                    {(['male', 'female'] as const).map(g => (
                                         <button
                                             key={g}
-                                            onClick={() => setForm({ ...form, gender: g as any })}
+                                            onClick={() => setForm({ ...form, gender: g })}
                                             className={`w-32 py-4 rounded-2xl text-sm font-bold transition-all border-2 ${form.gender === g
                                                 ? 'bg-primary/5 border-primary text-primary shadow-lg scale-105'
                                                 : 'bg-white/40 border-transparent text-muted-foreground hover:bg-white/60'
@@ -173,12 +201,7 @@ export default function OnboardingPage() {
 
                                 {/* Metrics */}
                                 <div className="grid grid-cols-2 gap-4">
-                                    {[
-                                        { l: '出生年份', k: 'birthYear', p: '1995' },
-                                        { l: '身高 (cm)', k: 'height', p: '175' },
-                                        { l: '体重 (kg)', k: 'weight', p: '70' },
-                                        { l: '目标体重 (kg)', k: 'targetWeight', p: '65' }
-                                    ].map((field: any) => (
+                                    {numericFields.map((field) => (
                                         <div key={field.k} className="space-y-2">
                                             <label className="text-xs font-bold uppercase text-muted-foreground">{field.l}</label>
                                             <input
@@ -204,14 +227,10 @@ export default function OnboardingPage() {
 
                                 {/* Goals */}
                                 <div className="grid gap-3">
-                                    {[
-                                        { id: 'fat_loss', icon: '🔥', title: '减脂刷脂', desc: '热量缺口，激进循环' },
-                                        { id: 'muscle_gain', icon: '💪', title: '增肌塑形', desc: '热量盈余，高碳日为主' },
-                                        { id: 'maintenance', icon: '⚖️', title: '保持健康', desc: '灵活饮食，代谢健康' }
-                                    ].map(opt => (
+                                    {goalOptions.map(opt => (
                                         <button
                                             key={opt.id}
-                                            onClick={() => setForm({ ...form, goal: opt.id as any })}
+                                            onClick={() => setForm({ ...form, goal: opt.id })}
                                             className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all text-left group ${form.goal === opt.id
                                                 ? 'border-primary bg-primary/5 shadow-inner'
                                                 : 'border-transparent bg-white/40 hover:bg-white/60'

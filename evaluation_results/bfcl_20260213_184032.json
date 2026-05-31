@@ -1,0 +1,7 @@
+{
+  "benchmark": "BFCL",
+  "total_samples": 5,
+  "correct_samples": 5,
+  "overall_accuracy": 1.0,
+  "evaluation_time": "2026-02-13T18:40:32.396224"
+}

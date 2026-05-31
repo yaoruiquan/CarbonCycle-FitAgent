@@ -4,7 +4,7 @@ import { useCallback, useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { userStorage } from "@/lib/storage";
 import { planApi, logApi, reportApi } from "@/lib/api";
-import { CarbonCyclePlan, LogStats } from "@/lib/types";
+import { CarbonCyclePlan, HistoricalReport, LogStats } from "@/lib/types";
 
 interface WeeklyStats {
     calorieTarget: number;
@@ -19,22 +19,6 @@ interface WeeklyStats {
     weightStart: number | null;
     weightEnd: number | null;
     weightChange: number | null;
-}
-
-interface HistoricalReport {
-    id: string;
-    user_id: string;
-    week_start: string;
-    week_end: string;
-    calorie_rate: number;
-    training_rate: number;
-    weight_change: number | null;
-    avg_protein: number;
-    avg_carbs: number;
-    avg_fat: number;
-    summary: string | null;
-    recommendations: string[];
-    created_at: string;
 }
 
 const GlassCard = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (

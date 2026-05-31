@@ -1,0 +1,10 @@
+{
+  "benchmark": "BFCL",
+  "category": "simple_python",
+  "total_samples": 0,
+  "correct_samples": 0,
+  "overall_accuracy": 0.0,
+  "error_rate": 0.0,
+  "category_metrics": {},
+  "evaluation_time": "2026-02-13T18:28:50.788442"
+}

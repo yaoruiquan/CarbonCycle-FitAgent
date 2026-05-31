@@ -75,11 +75,9 @@ export default function ChatPage() {
         try {
             // Use streaming API
             let fullContent = "";
-            let newSessionId = sessionId;
 
             for await (const chunk of chatApi.streamMessage(userId, messageContent, sessionId || undefined)) {
                 if (chunk.type === "session") {
-                    newSessionId = chunk.session_id;
                     setSessionId(chunk.session_id);
                 } else if (chunk.type === "content") {
                     fullContent += chunk.content;

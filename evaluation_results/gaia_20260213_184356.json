@@ -1,0 +1,96 @@
+{
+  "benchmark": "GAIA",
+  "description": "通用 AI 助手能力评估 (General AI Assistant)",
+  "level": null,
+  "total_samples": 10,
+  "correct_samples": 8,
+  "overall_accuracy": 0.8,
+  "level_accuracy": {
+    "level_1": 0.875,
+    "level_2": 0.5,
+    "level_3": 0
+  },
+  "details": [
+    {
+      "id": "gaia_1",
+      "question": "What is the capital of France?",
+      "level": 1,
+      "predicted": "Paris",
+      "expected": "Paris",
+      "is_correct": true
+    },
+    {
+      "id": "gaia_2",
+      "question": "What is 15 plus 27?",
+      "level": 1,
+      "predicted": "42",
+      "expected": "42",
+      "is_correct": true
+    },
+    {
+      "id": "gaia_3",
+      "question": "If a train travels 120 km in 2 hours, what is its speed in km/h?",
+      "level": 2,
+      "predicted": "60 km/h",
+      "expected": "60",
+      "is_correct": false
+    },
+    {
+      "id": "gaia_4",
+      "question": "What year did World War II end?",
+      "level": 1,
+      "predicted": "1945.",
+      "expected": "1945",
+      "is_correct": true
+    },
+    {
+      "id": "gaia_5",
+      "question": "What is the largest planet in our solar system?",
+      "level": 1,
+      "predicted": "Jupiter",
+      "expected": "Jupiter",
+      "is_correct": true
+    },
+    {
+      "id": "gaia_6",
+      "question": "Calculate 100 divided by 4",
+      "level": 1,
+      "predicted": "25",
+      "expected": "25",
+      "is_correct": true
+    },
+    {
+      "id": "gaia_7",
+      "question": "What is the chemical symbol for gold?",
+      "level": 1,
+      "predicted": "Au",
+      "expected": "Au",
+      "is_correct": true
+    },
+    {
+      "id": "gaia_8",
+      "question": "If x + 5 = 12, what is x?",
+      "level": 2,
+      "predicted": "7",
+      "expected": "7",
+      "is_correct": true
+    },
+    {
+      "id": "gaia_9",
+      "question": "What is the square of 12?",
+      "level": 1,
+      "predicted": "144.",
+      "expected": "144",
+      "is_correct": true
+    },
+    {
+      "id": "gaia_10",
+      "question": "How many legs does a spider have?",
+      "level": 1,
+      "predicted": "8 legs.",
+      "expected": "8",
+      "is_correct": false
+    }
+  ],
+  "evaluation_time": "2026-02-13T18:43:56.967502"
+}

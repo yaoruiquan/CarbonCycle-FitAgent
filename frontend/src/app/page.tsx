@@ -16,7 +16,7 @@ interface GlassCardProps {
 }
 
 const GlassCard = ({ children, className = "", onClick }: GlassCardProps) => (
-  <div onClick={onClick} className={`glass-card p-8 ${className}`}>
+  <div onClick={onClick} className={`glass-card p-5 ${className}`}>
     {children}
   </div>
 );
@@ -30,7 +30,7 @@ interface MacroRingProps {
 }
 
 const MacroRing = ({ value, total, color, label, icon }: MacroRingProps) => {
-  const radius = 36; // Increased from 30
+  const radius = 32; // Adjusted for compact grid display
   const circumference = 2 * Math.PI * radius;
   const progress = Math.min(value / total, 1) * circumference;
 
@@ -150,18 +150,18 @@ export default function DashboardPage() {
 
   return (
     <>
-      <div className="bento-grid grid-cols-12 grid-rows-12 gap-6 p-6 max-w-[1600px] mx-auto">
+      <div className="bento-grid grid-cols-12 gap-4 p-4 max-w-[1600px] mx-auto min-h-0" style={{ gridTemplateRows: 'repeat(12, minmax(0, 1fr))' }}>
 
         {/* 1. Today's Plan (Top Left) */}
         <GlassCard
-          className="col-span-3 row-span-4 flex flex-col justify-between overflow-hidden relative group cursor-pointer hover:border-primary/50 transition-all"
+          className="col-span-3 row-span-3 flex flex-col justify-between overflow-y-auto no-scrollbar relative group cursor-pointer hover:border-primary/50 transition-all"
           onClick={() => todayPlan && setSelectedDay(todayPlan)}
         >
           <div className="absolute top-4 right-4 p-2 opacity-30 group-hover:opacity-100 transition-opacity">
             <span className="text-3xl">📝</span>
           </div>
           <div>
-            <h3 className="text-2xl font-black text-primary mb-2">今日计划</h3>
+            <h3 className="text-xl font-black text-primary mb-1">今日计划</h3>
             <div className="flex items-center gap-3 mb-4">
               <span className={`px-3 py-1 rounded-full text-xs font-bold shadow-sm ${dayConfig?.bg} ${dayConfig?.text}`}>
                 {dayConfig?.label}
@@ -191,12 +191,12 @@ export default function DashboardPage() {
         </GlassCard>
 
         {/* 2. Primary Stats + Hello (Top Center/Right) */}
-        <div className="col-span-9 row-span-4 grid grid-cols-3 gap-6">
-          <GlassCard className="flex flex-col justify-center gap-2">
-            <h1 className="text-4xl font-black text-primary tracking-tight">你好, {user?.name}</h1>
-            <p className="text-lg text-muted-foreground font-medium">今天也要保持 {dayConfig?.label} 的节奏!</p>
+        <div className="col-span-9 row-span-3 grid grid-cols-3 gap-4">
+          <GlassCard className="flex flex-col justify-center gap-1">
+            <h1 className="text-3xl font-black text-primary tracking-tight">你好, {user?.name}</h1>
+            <p className="text-base text-muted-foreground font-medium">今天也要保持 {dayConfig?.label} 的节奏!</p>
 
-            <div className="mt-6 flex items-end gap-8">
+            <div className="mt-4 flex items-end gap-6">
               <div>
                 <div className="text-5xl font-black text-foreground">{Math.round(calories)}</div>
                 <div className="text-xs uppercase font-bold text-muted-foreground mt-1 tracking-wider">目标热量 (kcal)</div>
@@ -241,14 +241,14 @@ export default function DashboardPage() {
 
         {/* 3. Middle Row: Macros + Training + Diet Log */}
         {/* Macros */}
-        <GlassCard className="col-span-5 row-span-4 flex items-center justify-around px-8">
+        <GlassCard className="col-span-4 row-span-5 flex items-center justify-around px-4">
           <MacroRing value={consumedMacros.protein_g} total={macros.protein_g} color="text-emerald-500" label="蛋白质" icon="🥩" />
           <MacroRing value={consumedMacros.carbs_g} total={macros.carbs_g} color="text-amber-500" label="碳水" icon="🍚" />
           <MacroRing value={consumedMacros.fat_g} total={macros.fat_g} color="text-rose-500" label="脂肪" icon="🥑" />
         </GlassCard>
 
         {/* Training Checklist (Middle) */}
-        <GlassCard className="col-span-3 row-span-4 overflow-hidden">
+        <GlassCard className="col-span-4 row-span-5 overflow-hidden">
           <TrainingChecklist
             todayPlan={todayPlan}
             onToggle={(exercise, completed) => {
@@ -258,7 +258,7 @@ export default function DashboardPage() {
         </GlassCard>
 
         {/* Today's Diet Log */}
-        <GlassCard className="col-span-4 row-span-4 flex flex-col overflow-hidden">
+        <GlassCard className="col-span-4 row-span-5 flex flex-col overflow-hidden">
           <div className="flex justify-between items-center mb-3">
             <h3 className="text-lg font-extrabold text-primary flex items-center gap-2">
               📝 今日饮食记录

@@ -1,0 +1,8 @@
+{
+  "benchmark": "GAIA",
+  "level": null,
+  "total_samples": 5,
+  "correct_samples": 4,
+  "overall_accuracy": 0.8,
+  "evaluation_time": "2026-02-13T18:41:05.246044"
+}

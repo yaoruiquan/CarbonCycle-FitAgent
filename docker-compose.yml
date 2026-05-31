@@ -10,12 +10,13 @@ services:
       - LLM_API_KEY=${LLM_API_KEY}
       - LLM_MODEL=qwen-plus
       - LLM_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY is required}
       - LOG_LEVEL=INFO
     volumes:
       - ./data:/app/data
     restart: unless-stopped
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
+      test: [ "CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health', timeout=5).read()" ]
       interval: 30s
       timeout: 10s
       retries: 3

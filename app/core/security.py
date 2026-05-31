@@ -6,13 +6,16 @@ from passlib.context import CryptContext
 
 from app.core.config import get_settings
 
-settings = get_settings()
-
 pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 ALGORITHM = "HS256"
-# Add a default secret key if not in settings, but it's better to have it in .env
-SECRET_KEY = getattr(settings, "secret_key", "super-secret-key-change-me")
+
+
+def get_secret_key() -> str:
+    secret_key = get_settings().secret_key
+    if not secret_key:
+        raise RuntimeError("SECRET_KEY must be configured before issuing access tokens")
+    return secret_key
 
 
 def create_access_token(
@@ -25,7 +28,7 @@ def create_access_token(
             minutes=60 * 24 * 7  # 7 days
         )
     to_encode = {"exp": expire, "sub": str(subject)}
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    encoded_jwt = jwt.encode(to_encode, get_secret_key(), algorithm=ALGORITHM)
     return encoded_jwt
 
 

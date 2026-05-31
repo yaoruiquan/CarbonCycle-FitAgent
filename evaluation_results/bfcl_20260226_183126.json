@@ -1,0 +1,50 @@
+{
+  "benchmark": "BFCL",
+  "description": "工具调用能力评估 (Tool Calling)",
+  "total_samples": 5,
+  "correct_samples": 5,
+  "overall_accuracy": 1.0,
+  "details": [
+    {
+      "id": "simple_0",
+      "question": "What is the weather like in Beijing?",
+      "predicted": "get_weather",
+      "expected": "get_weather",
+      "is_correct": true,
+      "response": "{\"name\": \"get_weather\", \"arguments\": {\"location\": \"Beijing\"}}"
+    },
+    {
+      "id": "simple_1",
+      "question": "Calculate the factorial of 5",
+      "predicted": "calculate_factorial",
+      "expected": "calculate_factorial",
+      "is_correct": true,
+      "response": "To calculate the factorial of 5, I will call the `calculate_factorial` function with the number 5 as its parameter.\n\n{\"name\": \"calculate_factorial\", \"arguments\": {\"number\": 5}}"
+    },
+    {
+      "id": "simple_2",
+      "question": "Find the area of a triangle with base 10 and height 5",
+      "predicted": "calculate_triangle_area",
+      "expected": "calculate_triangle_area",
+      "is_correct": true,
+      "response": "calculate_triangle_area({\"base\": 10, \"height\": 5})"
+    },
+    {
+      "id": "simple_3",
+      "question": "What is the square root of 16?",
+      "predicted": "sqrt",
+      "expected": "sqrt",
+      "is_correct": true,
+      "response": "{\"name\": \"sqrt\", \"parameters\": {\"number\": 16}}"
+    },
+    {
+      "id": "simple_4",
+      "question": "Convert 100 degrees Fahrenheit to Celsius",
+      "predicted": "fahrenheit_to_celsius",
+      "expected": "fahrenheit_to_celsius",
+      "is_correct": true,
+      "response": "{\n  \"function\": \"fahrenheit_to_celsius\",\n  \"parameters\": {\n    \"fahrenheit\": 100\n  }\n}"
+    }
+  ],
+  "evaluation_time": "2026-02-26T18:31:26.768350"
+}

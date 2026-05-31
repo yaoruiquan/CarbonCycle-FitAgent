@@ -17,6 +17,14 @@ const dayConfig: Record<DayType, { label: string; bg: string; text: string; emoj
     refeed: { label: "欺骗餐", bg: "bg-pink-100", text: "text-pink-700", emoji: "💗" },
 };
 
+type EditableMacroKey = "protein_g" | "carbs_g" | "fat_g";
+
+const macroFields: { l: string; k: EditableMacroKey; c: string; bg: string }[] = [
+    { l: '蛋白质 (P)', k: 'protein_g', c: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { l: '碳水 (C)', k: 'carbs_g', c: 'text-amber-600', bg: 'bg-amber-50' },
+    { l: '脂肪 (F)', k: 'fat_g', c: 'text-rose-600', bg: 'bg-rose-50' }
+];
+
 export default function DayDetailModal({ day, isOpen, onClose, onSave }: DayDetailModalProps) {
     const [editedDay, setEditedDay] = useState<DayPlan>(day);
 
@@ -29,7 +37,7 @@ export default function DayDetailModal({ day, isOpen, onClose, onSave }: DayDeta
     const cfg = dayConfig[editedDay.day_type];
     const calories = editedDay.macros.protein_g * 4 + editedDay.macros.carbs_g * 4 + editedDay.macros.fat_g * 9;
 
-    const handleMacroChange = (key: 'protein_g' | 'carbs_g' | 'fat_g', value: string) => {
+    const handleMacroChange = (key: EditableMacroKey, value: string) => {
         setEditedDay({
             ...editedDay,
             macros: { ...editedDay.macros, [key]: Number(value) }
@@ -63,16 +71,12 @@ export default function DayDetailModal({ day, isOpen, onClose, onSave }: DayDeta
                     <div className="space-y-3">
                         <label className="text-xs font-bold uppercase text-muted-foreground">宏量营养素 (Target Macros)</label>
                         <div className="flex gap-4">
-                            {[
-                                { l: '蛋白质 (P)', k: 'protein_g', c: 'text-emerald-600', bg: 'bg-emerald-50' },
-                                { l: '碳水 (C)', k: 'carbs_g', c: 'text-amber-600', bg: 'bg-amber-50' },
-                                { l: '脂肪 (F)', k: 'fat_g', c: 'text-rose-600', bg: 'bg-rose-50' }
-                            ].map((m: any) => (
+                            {macroFields.map((m) => (
                                 <div key={m.k} className={`flex-1 p-3 rounded-xl ${m.bg}`}>
                                     <div className={`text-xs font-bold mb-1 ${m.c}`}>{m.l}</div>
                                     <input
                                         type="number"
-                                        value={editedDay.macros[m.k as keyof typeof editedDay.macros]}
+                                        value={editedDay.macros[m.k]}
                                         onChange={e => handleMacroChange(m.k, e.target.value)}
                                         className="w-full bg-transparent font-black text-xl outline-none"
                                     />

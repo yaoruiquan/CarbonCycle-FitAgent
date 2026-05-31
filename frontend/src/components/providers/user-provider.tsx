@@ -3,10 +3,11 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { userStorage } from "@/lib/storage";
 import { userApi } from "@/lib/api";
+import { UserProfile } from "@/lib/types";
 
 interface UserContextType {
     userId: string | null;
-    user: any | null;
+    user: UserProfile | null;
     loading: boolean;
     login: (id: string) => Promise<void>;
     logout: () => void;
@@ -17,7 +18,7 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
     const [userId, setUserId] = useState<string | null>(null);
-    const [user, setUser] = useState<any | null>(null);
+    const [user, setUser] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
 
     const fetchUser = async (id: string) => {

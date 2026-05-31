@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
+import Image from "next/image";
 
 interface FoodAnalysisResult {
     food_name: string;
@@ -297,9 +298,12 @@ export default function FoodUploadModal({
                                 />
 
                                 {previewUrl ? (
-                                    <img
+                                    <Image
                                         src={previewUrl}
                                         alt="食物照片"
+                                        width={640}
+                                        height={192}
+                                        unoptimized
                                         className="w-full h-48 object-cover rounded-xl"
                                     />
                                 ) : (

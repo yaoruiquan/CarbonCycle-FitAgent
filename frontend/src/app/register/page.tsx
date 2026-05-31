@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { authApi } from "@/lib/api";
 
@@ -12,7 +11,6 @@ export default function RegisterPage() {
     const [name, setName] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
-    const router = useRouter();
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -38,7 +36,7 @@ export default function RegisterPage() {
                 goal: "maintenance"
             };
 
-            const user = await authApi.register(registerData);
+            await authApi.register(registerData);
 
             // Log them in immediately
             const loginResponse = await authApi.login({ email, password });
@@ -49,8 +47,8 @@ export default function RegisterPage() {
 
             // Redirect to onboarding to complete profile
             window.location.href = "/onboarding";
-        } catch (err: any) {
-            setError(err.message || "注册失败，该邮箱可能已被注册");
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : "注册失败，该邮箱可能已被注册");
         } finally {
             setLoading(false);
         }

@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     
     # Logging
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
+    secret_key: str = ""
     
     # Database
     database_url: str = "sqlite+aiosqlite:///./data/carboncycle.db"

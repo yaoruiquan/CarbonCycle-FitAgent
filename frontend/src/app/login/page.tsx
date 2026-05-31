@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { authApi } from "@/lib/api";
 
@@ -10,7 +9,6 @@ export default function LoginPage() {
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
-    const router = useRouter();
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -27,8 +25,8 @@ export default function LoginPage() {
 
             // Broadcast login event if needed or just redirect
             window.location.href = "/";
-        } catch (err: any) {
-            setError(err.message || "登录失败，请检查邮箱和密码");
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : "登录失败，请检查邮箱和密码");
         } finally {
             setLoading(false);
         }

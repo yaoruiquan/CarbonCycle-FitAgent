@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { planApi } from "@/lib/api";
 import { userStorage } from "@/lib/storage";
@@ -316,11 +316,7 @@ export default function StrategyPage() {
         })
     );
 
-    useEffect(() => {
-        loadData();
-    }, []);
-
-    const loadData = () => {
+    const loadData = useCallback(() => {
         const userId = userStorage.getUserId();
         if (!userId) return router.push("/onboarding");
 
@@ -331,7 +327,11 @@ export default function StrategyPage() {
             })
             .catch(() => null)
             .finally(() => setLoading(false));
-    };
+    }, [router]);
+
+    useEffect(() => {
+        loadData();
+    }, [loadData]);
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;

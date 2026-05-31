@@ -1,0 +1,90 @@
+{
+  "benchmark": "BFCL",
+  "description": "工具调用能力评估 (Tool Calling)",
+  "total_samples": 10,
+  "correct_samples": 10,
+  "overall_accuracy": 1.0,
+  "details": [
+    {
+      "id": "simple_0",
+      "question": "What is the weather like in Beijing?",
+      "predicted": "get_weather",
+      "expected": "get_weather",
+      "is_correct": true,
+      "response": "{\"name\": \"get_weather\", \"arguments\": {\"location\": \"Beijing\"}}"
+    },
+    {
+      "id": "simple_1",
+      "question": "Calculate the factorial of 5",
+      "predicted": "calculate_factorial",
+      "expected": "calculate_factorial",
+      "is_correct": true,
+      "response": "To calculate the factorial of 5, I will call the `calculate_factorial` function with the number 5 as its parameter.\n\n{\"name\": \"calculate_factorial\", \"arguments\": {\"number\": 5}}"
+    },
+    {
+      "id": "simple_2",
+      "question": "Find the area of a triangle with base 10 and height 5",
+      "predicted": "calculate_triangle_area",
+      "expected": "calculate_triangle_area",
+      "is_correct": true,
+      "response": "calculate_triangle_area({\"base\": 10, \"height\": 5})"
+    },
+    {
+      "id": "simple_3",
+      "question": "What is the square root of 16?",
+      "predicted": "sqrt",
+      "expected": "sqrt",
+      "is_correct": true,
+      "response": "{\"name\": \"sqrt\", \"parameters\": {\"number\": 16}}"
+    },
+    {
+      "id": "simple_4",
+      "question": "Convert 100 degrees Fahrenheit to Celsius",
+      "predicted": "fahrenheit_to_celsius",
+      "expected": "fahrenheit_to_celsius",
+      "is_correct": true,
+      "response": "{\n  \"fahrenheit_to_celsius\": {\n    \"fahrenheit\": 100\n  }\n}"
+    },
+    {
+      "id": "simple_5",
+      "question": "What is 25 squared?",
+      "predicted": "power",
+      "expected": "power",
+      "is_correct": true,
+      "response": "To calculate 25 squared, I will use the `power` function with a base of 25 and an exponent of 2.\n\nHere is the call to the function:\n\n```json\n{\n  \"name\": \"power\",\n  \"parameters\": {\n    \"base\": 25,\n    "
+    },
+    {
+      "id": "simple_6",
+      "question": "Get the current time in New York",
+      "predicted": "get_current_time",
+      "expected": "get_current_time",
+      "is_correct": true,
+      "response": "{\n  \"name\": \"get_current_time\",\n  \"arguments\": {\n    \"timezone\": \"America/New_York\"\n  }\n}"
+    },
+    {
+      "id": "simple_7",
+      "question": "Calculate 15 + 27",
+      "predicted": "add",
+      "expected": "add",
+      "is_correct": true,
+      "response": "To calculate 15 + 27, I will use the `add` function with the parameters set as follows: `a` is 15 and `b` is 27. Let's proceed with the calculation.\n\n```json\n{\n  \"name\": \"add\",\n  \"parameters\": {\n    \""
+    },
+    {
+      "id": "simple_8",
+      "question": "What is the absolute value of -42?",
+      "predicted": "abs",
+      "expected": "abs",
+      "is_correct": true,
+      "response": "To find the absolute value of -42, I will call the `abs` function with the number -42 as its parameter.\n\n```json\n{\n  \"number\": -42\n}\n```\n\nLet's proceed with this call.\n```json\n{\n  \"name\": \"abs\",\n  \"ar"
+    },
+    {
+      "id": "simple_9",
+      "question": "Round 3.14159 to 2 decimal places",
+      "predicted": "round",
+      "expected": "round",
+      "is_correct": true,
+      "response": "{\"name\": \"round\", \"parameters\": {\"number\": 3.14159, \"digits\": 2}}"
+    }
+  ],
+  "evaluation_time": "2026-02-26T21:02:01.362513"
+}
