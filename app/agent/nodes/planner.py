@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from app.agent.state import AgentState
+from app.agent.trace import append_trace, duration_ms, make_step_trace, start_timer
 from app.core.logging import get_logger, log_agent_decision
 from app.llm.client import get_llm_client
 from app.rag.retriever import retrieve_context
@@ -89,6 +90,7 @@ async def plan_node(state: AgentState) -> dict[str, Any]:
         Updated state with planner_output.
     """
     logger.info(f"Planner node executing for run {state.get('run_id')}")
+    started_at, started = start_timer()
     
     user = state.get("user", {})
     goal = user.get("goal", "fat_loss")
@@ -125,15 +127,38 @@ async def plan_node(state: AgentState) -> dict[str, Any]:
             context={"user_id": user.get("user_id"), "goal": goal},
         )
         
+        planner_output = {
+            "raw_response": content,
+            "status": "success",
+            "knowledge_used": bool(knowledge_context),
+        }
         return {
-            "planner_output": {
-                "raw_response": content,
-                "status": "success",
-                "knowledge_used": bool(knowledge_context),
-            },
+            "planner_output": planner_output,
             "messages": state.get("messages", []) + [
                 {"role": "assistant", "content": content}
             ],
+            "trace": append_trace(
+                state,
+                make_step_trace(
+                    node="planner",
+                    title="计划生成",
+                    status="success",
+                    decision="generate_plan",
+                    reasoning="基于用户档案、目标和碳循环知识检索生成计划上下文。",
+                    input_summary={
+                        "goal": goal,
+                        "weight_kg": user.get("weight_kg"),
+                        "cycle_length": plan.get("cycle_length", 7),
+                    },
+                    output_summary={
+                        "knowledge_used": bool(knowledge_context),
+                        "response_chars": len(content or ""),
+                    },
+                    confidence=0.82 if knowledge_context else 0.68,
+                    started_at=started_at,
+                    elapsed_ms=duration_ms(started),
+                ),
+            ),
         }
         
     except Exception as e:
@@ -141,4 +166,19 @@ async def plan_node(state: AgentState) -> dict[str, Any]:
         return {
             "planner_output": {"status": "error", "error": str(e)},
             "error": str(e),
+            "trace": append_trace(
+                state,
+                make_step_trace(
+                    node="planner",
+                    title="计划生成",
+                    status="error",
+                    decision="planner_failed",
+                    reasoning=str(e),
+                    input_summary={"goal": goal},
+                    output_summary={"error": str(e)},
+                    confidence=0,
+                    started_at=started_at,
+                    elapsed_ms=duration_ms(started),
+                ),
+            ),
         }

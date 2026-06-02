@@ -64,6 +64,9 @@ class UserModel(Base):
     plans = relationship("PlanModel", back_populates="user", cascade="all, delete-orphan")
     logs = relationship("LogModel", back_populates="user", cascade="all, delete-orphan")
     weight_logs = relationship("WeightLogModel", back_populates="user", cascade="all, delete-orphan")
+    agent_runs = relationship("AgentRunModel", back_populates="user", cascade="all, delete-orphan")
+    agent_missions = relationship("AgentMissionModel", back_populates="user", cascade="all, delete-orphan")
+    memories = relationship("UserMemoryModel", back_populates="user", cascade="all, delete-orphan")
     
     def to_pydantic(self):
         """Convert to Pydantic model."""
@@ -297,4 +300,101 @@ class WeightLogModel(Base):
     # Relationships
     user = relationship("UserModel", back_populates="weight_logs")
 
+
+class AgentRunModel(Base):
+    """Persistent record of an agent execution."""
+
+    __tablename__ = "agent_runs"
+
+    id = Column(String(36), primary_key=True)
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    trigger = Column(String(50), nullable=False)
+    status = Column(String(30), default="running", index=True)
+    latency_ms = Column(Integer, default=0)
+    planner_output = Column(JSON, default=dict)
+    actor_output = Column(JSON, default=dict)
+    reflection = Column(JSON, default=dict)
+    adjustment = Column(JSON, default=dict)
+    reflection_summary = Column(Text, nullable=True)
+    motivation = Column(Text, nullable=True)
+    trends = Column(JSON, default=dict)
+    tool_trace = Column(JSON, default=list)
+    plan_diff = Column(JSON, default=list)
+    safety_warnings = Column(JSON, default=list)
+    action_cards = Column(JSON, default=list)
+    memory_context = Column(JSON, default=dict)
+    evaluation_summary = Column(JSON, default=dict)
+    error = Column(Text, nullable=True)
+    started_at = Column(DateTime, default=datetime.now)
+    completed_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.now)
+
+    user = relationship("UserModel", back_populates="agent_runs")
+    steps = relationship(
+        "AgentStepModel",
+        back_populates="run",
+        cascade="all, delete-orphan",
+        order_by="AgentStepModel.sequence",
+    )
+
+
+class AgentStepModel(Base):
+    """Persistent observable trace step for an agent run."""
+
+    __tablename__ = "agent_steps"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    run_id = Column(String(36), ForeignKey("agent_runs.id", ondelete="CASCADE"), nullable=False, index=True)
+    sequence = Column(Integer, nullable=False)
+    node = Column(String(50), nullable=False)
+    title = Column(String(100), nullable=False)
+    status = Column(String(30), nullable=False)
+    decision = Column(String(100), nullable=True)
+    reasoning = Column(Text, nullable=True)
+    input_summary = Column(JSON, default=dict)
+    output_summary = Column(JSON, default=dict)
+    confidence = Column(Float, default=0)
+    duration_ms = Column(Integer, default=0)
+    started_at = Column(DateTime, nullable=True)
+    completed_at = Column(DateTime, nullable=True)
+
+    run = relationship("AgentRunModel", back_populates="steps")
+
+
+class AgentMissionModel(Base):
+    """Goal-oriented task created by the agent."""
+
+    __tablename__ = "agent_missions"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    run_id = Column(String(36), ForeignKey("agent_runs.id", ondelete="SET NULL"), nullable=True, index=True)
+    title = Column(String(200), nullable=False)
+    description = Column(Text, nullable=True)
+    status = Column(String(30), default="pending", index=True)
+    due_date = Column(Date, nullable=True)
+    next_action = Column(Text, nullable=True)
+    evidence = Column(JSON, default=list)
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+
+    user = relationship("UserModel", back_populates="agent_missions")
+
+
+class UserMemoryModel(Base):
+    """Persistent user memory learned by the agent."""
+
+    __tablename__ = "user_memories"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    category = Column(String(50), nullable=False)
+    key = Column(String(100), nullable=False)
+    value = Column(JSON, default=dict)
+    confidence = Column(Float, default=0.7)
+    source = Column(String(50), default="agent")
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+
+    user = relationship("UserModel", back_populates="memories")
 

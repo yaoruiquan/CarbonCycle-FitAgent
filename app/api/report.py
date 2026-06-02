@@ -17,6 +17,7 @@ from app.core.database import get_db
 from app.core.logging import get_logger
 from app.agent import run_agent
 from app.db.db_storage import DatabaseStorage
+from app.services.agent_observability import AgentObservabilityService
 
 logger = get_logger(__name__)
 
@@ -80,6 +81,7 @@ async def generate_weekly_report(
     """
     stats = request.stats
     storage = DatabaseStorage(db)
+    observability = AgentObservabilityService(db)
     
     # Get user data
     try:
@@ -133,6 +135,8 @@ async def generate_weekly_report(
         logs_context = []
 
     try:
+        memory_context = await observability.build_memory_context(request.user_id)
+        evaluation_summary = await observability.get_evaluation_summary()
         # Call the Agent with memory integration
         result = await run_agent(
             user_id=request.user_id,
@@ -146,6 +150,9 @@ async def generate_weekly_report(
                 "target_fat": stats.avgFat
             },
             logs=logs_context,
+            db_session=db,
+            memory_context=memory_context,
+            evaluation_summary=evaluation_summary,
         )
         
         # Extract report from agent result

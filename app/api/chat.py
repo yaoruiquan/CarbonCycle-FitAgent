@@ -197,7 +197,12 @@ async def generate_response(
     response = await llm.chat(llm_messages)
     content = response.get("content", "抱歉，我暂时无法回答这个问题。")
     
-    # Generate action suggestions based on intent
+    actions = build_action_cards_for_intent(intent)
+    return content, actions
+
+
+def build_action_cards_for_intent(intent: ChatIntent) -> list[ActionCard]:
+    """Generate executable action suggestions based on intent."""
     actions = []
     if intent == ChatIntent.QUERY_PLAN:
         actions.append(ActionCard(
@@ -220,6 +225,13 @@ async def generate_response(
             description="标记今日训练完成",
             data={"action": "log_training"},
         ))
+    elif intent in [ChatIntent.ADJUST_PLAN, ChatIntent.GET_SUGGESTIONS]:
+        actions.append(ActionCard(
+            type=ActionType.ADJUST_PLAN,
+            title="运行 Agent 调整分析",
+            description="调用 Planner/Actor/Reflector/Adjuster 生成可审批调整",
+            data={"action": "run_agent", "trigger": "chat_adjustment"},
+        ))
     elif intent == ChatIntent.ANALYZE_WEEK:
         actions.append(ActionCard(
             type=ActionType.VIEW_REPORT,
@@ -228,7 +240,7 @@ async def generate_response(
             data={"route": "/report"},
         ))
     
-    return content, actions
+    return actions
 
 
 # ============ API Endpoints ============
@@ -406,11 +418,14 @@ async def stream_message(
             session_id=str(session.id),
             role=ChatRole.ASSISTANT.value,
             content=full_content,
-            metadata_json={},
+            metadata_json={"actions": [a.model_dump() for a in build_action_cards_for_intent(intent)]},
             timestamp=datetime.now(),
         )
         db.add(assistant_msg)
         await db.commit()
+        actions_payload = [a.model_dump() for a in build_action_cards_for_intent(intent)]
+        if actions_payload:
+            yield f"data: {json.dumps({'type': 'actions', 'actions': actions_payload}, ensure_ascii=False)}\n\n"
         
         # Send completion
         yield f"data: {json.dumps({'type': 'done', 'message_id': str(assistant_msg.id)})}\n\n"

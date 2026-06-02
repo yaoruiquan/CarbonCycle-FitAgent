@@ -16,7 +16,8 @@ from app.api import api_router
 from app.core.config import get_settings
 from app.core.database import close_db, init_db
 from app.core.logging import setup_logging, get_logger
-from app.core.scheduler import start_scheduler, stop_scheduler
+from app.core.scheduler import add_daily_task, start_scheduler, stop_scheduler
+from app.services.proactive_agent import run_daily_agent_checkins
 
 logger = get_logger(__name__)
 
@@ -33,6 +34,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info("Starting CarbonCycle-FitAgent...")
     
     await init_db()
+    add_daily_task("agent_daily_checkin", run_daily_agent_checkins, hour=21, minute=30)
     start_scheduler()
     
     logger.info("Application started successfully")

@@ -93,6 +93,7 @@ export default function FoodUploadModal({
             setEditCarbs(data.carbs_g);
             setEditProtein(data.protein_g);
             setEditFat(data.fat_g);
+            setEditMode(data.confidence < 0.65);
 
         } catch (err: unknown) {
             console.error(err);
@@ -136,6 +137,7 @@ export default function FoodUploadModal({
                 setEditCarbs(data.carbs_g);
                 setEditProtein(data.protein_g);
                 setEditFat(data.fat_g);
+                setEditMode(data.confidence < 0.65);
             } else {
                 // Manual input without AI - show empty result for user to fill
                 setResult({
@@ -424,6 +426,15 @@ export default function FoodUploadModal({
                                     </div>
                                 )}
                             </div>
+
+                            {result.confidence < 0.65 && (
+                                <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                                    <div className="font-bold">Agent 需要你确认这餐</div>
+                                    <div className="mt-1 text-xs leading-relaxed">
+                                        图片或食物描述的不确定性较高，我已打开修正模式。请确认份量和三大营养素后再记录，避免影响今日计划判断。
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Macros */}
                             <div className="grid grid-cols-3 gap-3">

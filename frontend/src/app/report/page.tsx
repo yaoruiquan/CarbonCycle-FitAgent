@@ -2,9 +2,10 @@
 
 import { useCallback, useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { AgentRunPanel } from "@/components/AgentRunPanel";
 import { userStorage } from "@/lib/storage";
-import { planApi, logApi, reportApi } from "@/lib/api";
-import { CarbonCyclePlan, HistoricalReport, LogStats } from "@/lib/types";
+import { agentApi, planApi, logApi, reportApi } from "@/lib/api";
+import { AgentRunResult, CarbonCyclePlan, HistoricalReport, LogStats } from "@/lib/types";
 
 interface WeeklyStats {
     calorieTarget: number;
@@ -35,6 +36,8 @@ function ReportContent() {
     const [stats, setStats] = useState<WeeklyStats | null>(null);
     const [aiReport, setAiReport] = useState<string>("");
     const [generatingReport, setGeneratingReport] = useState(false);
+    const [agentRun, setAgentRun] = useState<AgentRunResult | null>(null);
+    const [runningAgent, setRunningAgent] = useState(false);
 
     // Historical report mode
     const [historicalReport, setHistoricalReport] = useState<HistoricalReport | null>(null);
@@ -174,6 +177,24 @@ function ReportContent() {
         }
     };
 
+    const runAgentReview = async () => {
+        const userId = userStorage.getUserId();
+        if (!userId || runningAgent) return;
+        setRunningAgent(true);
+        try {
+            const result = await agentApi.run(userId, "weekly_review");
+            setAgentRun(result);
+            if (result.reflection_summary) {
+                setAiReport(result.reflection_summary);
+            }
+        } catch (err) {
+            console.error(err);
+            setAiReport("Agent 复盘失败，请稍后重试。");
+        } finally {
+            setRunningAgent(false);
+        }
+    };
+
     const handleAddWeight = () => {
         const value = parseFloat(weightInput);
         if (!isNaN(value) && value > 0) {
@@ -225,7 +246,7 @@ function ReportContent() {
     }
 
     return (
-        <div className="max-w-[1200px] mx-auto p-6 space-y-6">
+        <div className="max-w-[1440px] mx-auto p-6 space-y-6">
             {/* Header */}
             <div className="flex justify-between items-center">
                 <div>
@@ -243,6 +264,15 @@ function ReportContent() {
                             ⚖️ 记录体重
                         </button>
                     )}
+                    {!isHistorical && (
+                        <button
+                            onClick={runAgentReview}
+                            disabled={runningAgent}
+                            className="px-4 py-2 rounded-xl bg-accent text-white font-bold text-sm hover:bg-accent/90 transition-colors disabled:opacity-50"
+                        >
+                            {runningAgent ? "Agent 运行中..." : "运行 Agent 复盘"}
+                        </button>
+                    )}
                     <button
                         onClick={() => router.push(isHistorical ? "/planner" : "/")}
                         className="px-4 py-2 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary font-bold text-sm transition-colors"
@@ -252,6 +282,8 @@ function ReportContent() {
                 </div>
             </div>
 
+            <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
+                <div className="space-y-6">
             {/* Stats Grid */}
             <div className="grid grid-cols-4 gap-4">
                 <GlassCard className="text-center">
@@ -333,6 +365,12 @@ function ReportContent() {
                     </div>
                 )}
             </GlassCard>
+                </div>
+                <AgentRunPanel
+                    run={agentRun}
+                    userId={userStorage.getUserId()}
+                />
+            </div>
 
             {/* Weight Modal */}
             {showWeightModal && (

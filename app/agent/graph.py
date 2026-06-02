@@ -93,6 +93,9 @@ async def run_agent(
     user_context: dict[str, Any],
     plan_context: dict[str, Any],
     logs: list[dict[str, Any]],
+    db_session: Optional[Any] = None,
+    memory_context: Optional[dict[str, Any]] = None,
+    evaluation_summary: Optional[dict[str, Any]] = None,
 ) -> dict[str, Any]:
     """
     Run the agent with given context.
@@ -103,6 +106,9 @@ async def run_agent(
         user_context: User data.
         plan_context: Current plan data.
         logs: Recent diet logs.
+        db_session: Optional database session for tool execution.
+        memory_context: Optional durable user memory retrieved before the run.
+        evaluation_summary: Optional latest local evaluation metrics.
         
     Returns:
         Agent execution result with latency_ms.
@@ -117,9 +123,16 @@ async def run_agent(
     typed_user_context: UserContext = {
         "user_id": str(user_context.get("user_id", "")),
         "name": str(user_context.get("name", "User")),
+        "gender": str(user_context.get("gender", "")),
+        "age": int(user_context.get("age", 30)),
+        "height_cm": float(user_context.get("height_cm", 175)),
         "goal": str(user_context.get("goal", "maintain")),
         "weight_kg": float(user_context.get("weight_kg", 70)),
+        "target_weight_kg": float(user_context.get("target_weight_kg", user_context.get("weight_kg", 70))),
+        "activity_level": str(user_context.get("activity_level", "moderate")),
+        "training_days": int(user_context.get("training_days", 4)),
         "tdee": float(user_context.get("tdee", 2000)),
+        "dietary_preferences": str(user_context.get("dietary_preferences", "无特殊限制")),
     }
     
     typed_plan_context: PlanContext = {
@@ -131,6 +144,7 @@ async def run_agent(
         "target_protein": float(plan_context.get("target_protein", 150)),
         "target_carbs": float(plan_context.get("target_carbs", 200)),
         "target_fat": float(plan_context.get("target_fat", 60)),
+        "cycle_length": int(plan_context.get("cycle_length", 7)),
     }
     
     typed_logs: list[LogContext] = [
@@ -163,6 +177,15 @@ async def run_agent(
         "iteration": 0,
         "max_iterations": 10,
         "messages": [],
+        "db_session": db_session,
+        "trace": [],
+        "tool_trace": [],
+        "plan_diff": [],
+        "safety_warnings": [],
+        "missions": [],
+        "action_cards": [],
+        "memory_context": memory_context or {},
+        "evaluation_summary": evaluation_summary or {},
     }
     
     graph = get_agent_graph()
@@ -178,10 +201,20 @@ async def run_agent(
             "status": "success",
             "latency_ms": latency_ms,
             "planner_output": result.get("planner_output"),
+            "actor_output": result.get("actor_output"),
             "reflection": result.get("reflection"),
             "adjustment": result.get("adjustment"),
             "reflection_summary": result.get("reflection_summary"),
             "trends": result.get("trends"),
+            "motivation": result.get("motivation"),
+            "trace": result.get("trace", []),
+            "tool_trace": result.get("tool_trace", []),
+            "plan_diff": result.get("plan_diff", []),
+            "safety_warnings": result.get("safety_warnings", []),
+            "missions": result.get("missions", []),
+            "action_cards": result.get("action_cards", []),
+            "memory_context": result.get("memory_context", memory_context or {}),
+            "evaluation_summary": result.get("evaluation_summary", evaluation_summary or {}),
         }
         
     except Exception as e:

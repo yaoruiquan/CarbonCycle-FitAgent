@@ -9,14 +9,202 @@ Enhanced with RAG knowledge retrieval and LLM-powered suggestions.
 增强了 RAG 知识检索和 LLM 驱动的建议生成
 """
 
+from datetime import date, timedelta
 from typing import Any
+from uuid import uuid4
 
 from app.agent.state import AgentState, AdjustmentResult
+from app.agent.trace import append_trace, duration_ms, make_step_trace, start_timer
 from app.core.logging import get_logger, log_agent_decision
 from app.llm.client import get_llm_client
 from app.rag.retriever import retrieve_context
 
 logger = get_logger(__name__)
+
+
+def _target_calories(plan: dict[str, Any]) -> float:
+    """Return the current plan calorie target from explicit or macro fields."""
+    if plan.get("target_calories"):
+        return float(plan["target_calories"])
+    protein = float(plan.get("target_protein", 0) or 0)
+    carbs = float(plan.get("target_carbs", 0) or 0)
+    fat = float(plan.get("target_fat", 0) or 0)
+    return protein * 4 + carbs * 4 + fat * 9
+
+
+def _build_plan_diff(
+    plan: dict[str, Any],
+    calorie_adjustment: float,
+    patterns: list[str],
+) -> list[dict[str, Any]]:
+    """Build structured, approval-ready plan changes."""
+    current_calories = _target_calories(plan)
+    if not current_calories or abs(calorie_adjustment) < 1:
+        return []
+
+    next_calories = round(max(1200, current_calories + calorie_adjustment), 0)
+    diff: list[dict[str, Any]] = [
+        {
+            "field": "target_calories",
+            "label": "明日目标热量",
+            "before": round(current_calories, 0),
+            "after": next_calories,
+            "delta": round(next_calories - current_calories, 0),
+            "reason": "根据今日执行偏差做小幅补偿，避免一次性大改计划。",
+            "requires_confirmation": True,
+        }
+    ]
+
+    if "蛋白质摄入不足" in patterns and plan.get("target_protein"):
+        before = float(plan["target_protein"])
+        diff.append(
+            {
+                "field": "target_protein",
+                "label": "明日蛋白质目标",
+                "before": round(before, 0),
+                "after": round(before + 15, 0),
+                "delta": 15,
+                "reason": "蛋白质偏低时优先补足恢复和饱腹感。",
+                "requires_confirmation": True,
+            }
+        )
+
+    if calorie_adjustment < 0 and plan.get("target_carbs"):
+        before = float(plan["target_carbs"])
+        diff.append(
+            {
+                "field": "target_carbs",
+                "label": "明日碳水目标",
+                "before": round(before, 0),
+                "after": round(max(60, before + calorie_adjustment / 4), 0),
+                "delta": round(calorie_adjustment / 4, 0),
+                "reason": "热量超标时优先从碳水做温和回调。",
+                "requires_confirmation": True,
+            }
+        )
+
+    return diff
+
+
+def _build_safety_warnings(
+    user: dict[str, Any],
+    plan: dict[str, Any],
+    plan_diff: list[dict[str, Any]],
+    reflection: dict[str, Any],
+) -> list[dict[str, str]]:
+    """Apply nutrition guardrails to proposed changes."""
+    warnings: list[dict[str, str]] = []
+    current_calories = _target_calories(plan)
+    proposed_calories = next(
+        (float(item["after"]) for item in plan_diff if item.get("field") == "target_calories"),
+        current_calories,
+    )
+    tdee = float(user.get("tdee", 0) or 0)
+    weight = float(user.get("weight_kg", 0) or 0)
+    protein_target = next(
+        (float(item["after"]) for item in plan_diff if item.get("field") == "target_protein"),
+        float(plan.get("target_protein", 0) or 0),
+    )
+
+    if proposed_calories and proposed_calories < 1200:
+        warnings.append({
+            "level": "danger",
+            "message": "建议热量低于 1200 kcal，已限制为安全下限，避免极端节食。",
+            "rule": "minimum_calorie_floor",
+        })
+    if tdee and proposed_calories and (tdee - proposed_calories) / tdee > 0.35:
+        warnings.append({
+            "level": "warning",
+            "message": "建议热量缺口超过 TDEE 的 35%，需要谨慎执行并观察恢复状态。",
+            "rule": "deficit_cap",
+        })
+    if weight and protein_target and protein_target / weight < 1.2:
+        warnings.append({
+            "level": "warning",
+            "message": "蛋白质目标低于 1.2g/kg，可能影响训练恢复和保肌。",
+            "rule": "protein_floor",
+        })
+    if reflection.get("calorie_deviation_pct", 0) < -25:
+        warnings.append({
+            "level": "info",
+            "message": "今日摄入明显不足，Agent 会优先建议补足营养而不是继续降低热量。",
+            "rule": "under_eating_recovery",
+        })
+    return warnings
+
+
+def _build_missions(
+    patterns: list[str],
+    trends: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """Create short goal-oriented tasks for follow-up."""
+    tomorrow = (date.today() + timedelta(days=1)).isoformat()
+    missions: list[dict[str, Any]] = []
+
+    if "蛋白质摄入不足" in patterns:
+        missions.append({
+            "id": str(uuid4()),
+            "title": "连续 3 餐补足优质蛋白",
+            "description": "每餐至少加入一份鸡蛋、鱼、鸡胸、豆腐或酸奶。",
+            "status": "pending",
+            "due_date": tomorrow,
+            "next_action": "在下一餐记录里确认蛋白质来源。",
+            "evidence": ["餐食记录", "蛋白质克数"],
+        })
+    if "训练计划执行率低" in patterns or trends.get("training_completion_rate", 100) < 70:
+        missions.append({
+            "id": str(uuid4()),
+            "title": "完成一次 10 分钟保底训练",
+            "description": "用低门槛训练维持习惯连续性。",
+            "status": "pending",
+            "due_date": tomorrow,
+            "next_action": "点击训练打卡并填写完成备注。",
+            "evidence": ["训练完成状态", "训练备注"],
+        })
+    if not missions:
+        missions.append({
+            "id": str(uuid4()),
+            "title": "明日按计划完成三餐记录",
+            "description": "用完整记录帮助 Agent 判断是否需要继续调整。",
+            "status": "pending",
+            "due_date": tomorrow,
+            "next_action": "晚餐后补齐当天饮食。",
+            "evidence": ["餐次数量", "总热量", "宏量营养素"],
+        })
+    return missions[:3]
+
+
+def _build_action_cards(
+    plan_diff: list[dict[str, Any]],
+    missions: list[dict[str, Any]],
+    warnings: list[dict[str, str]],
+) -> list[dict[str, Any]]:
+    """Build executable UI actions from agent decisions."""
+    cards: list[dict[str, Any]] = []
+    if plan_diff:
+        cards.append({
+            "type": "apply_plan_diff",
+            "title": "审批并应用计划调整",
+            "description": f"包含 {len(plan_diff)} 项明日计划变更，应用前需要确认。",
+            "data": {"plan_diff": plan_diff, "safety_warnings": warnings},
+            "confirmation_required": True,
+        })
+    if missions:
+        cards.append({
+            "type": "create_missions",
+            "title": "创建本周 Agent 任务",
+            "description": f"创建 {len(missions)} 个跟踪任务，Agent 后续会按任务复盘。",
+            "data": {"missions": missions},
+            "confirmation_required": True,
+        })
+    cards.append({
+        "type": "open_agent_trace",
+        "title": "查看 Agent 决策轨迹",
+        "description": "展开 Planner、Actor、Reflector、Adjuster 的运行证据。",
+        "data": {"panel": "trace"},
+        "confirmation_required": False,
+    })
+    return cards
 
 
 async def _generate_smart_suggestions(
@@ -119,20 +307,41 @@ async def adjust_node(state: AgentState) -> dict[str, Any]:
         Updated state with adjustment result.
     """
     logger.info(f"Adjuster node executing for run {state.get('run_id')}")
+    started_at, started = start_timer()
     
     reflection = state.get("reflection")
     trends = state.get("trends", {})
     user = state.get("user", {})
+    plan = state.get("plan", {})
     
     if not reflection or not reflection.get("needs_adjustment"):
+        adjustment = AdjustmentResult(
+            adjustment_type="none",
+            calorie_adjustment=0,
+            immediate_actions=[],
+            behavioral_suggestions=[],
+        )
+        missions = _build_missions([], trends or {})
         return {
-            "adjustment": AdjustmentResult(
-                adjustment_type="none",
-                calorie_adjustment=0,
-                immediate_actions=[],
-                behavioral_suggestions=[],
-            ),
+            "adjustment": adjustment,
             "motivation": "继续保持！你做得很好。💪",
+            "missions": missions,
+            "action_cards": _build_action_cards([], missions, []),
+            "trace": append_trace(
+                state,
+                make_step_trace(
+                    node="adjuster",
+                    title="计划调整",
+                    status="skipped",
+                    decision="keep_current_plan",
+                    reasoning="反思结果未达到调整阈值，保留当前计划并创建轻量跟踪任务。",
+                    input_summary={"needs_adjustment": False},
+                    output_summary={"missions": len(missions), "plan_diff": 0},
+                    confidence=0.82,
+                    started_at=started_at,
+                    elapsed_ms=duration_ms(started),
+                ),
+            ),
         }
     
     severity = reflection.get("severity", "minor")
@@ -211,6 +420,10 @@ async def adjust_node(state: AgentState) -> dict[str, Any]:
         immediate_actions=actions,
         behavioral_suggestions=behavioral_suggestions[:5],  # Limit to 5
     )
+    plan_diff = _build_plan_diff(plan, round(cal_adj, 0), patterns)
+    safety_warnings = _build_safety_warnings(user, plan, plan_diff, reflection)
+    missions = _build_missions(patterns, trends)
+    action_cards = _build_action_cards(plan_diff, missions, safety_warnings)
     
     # Generate motivational message
     motivations = {
@@ -234,4 +447,32 @@ async def adjust_node(state: AgentState) -> dict[str, Any]:
     return {
         "adjustment": adjustment,
         "motivation": motivation,
+        "plan_diff": plan_diff,
+        "safety_warnings": safety_warnings,
+        "missions": missions,
+        "action_cards": action_cards,
+        "trace": append_trace(
+            state,
+            make_step_trace(
+                node="adjuster",
+                title="计划调整",
+                status="success",
+                decision=f"adjust_{adj_type}",
+                reasoning=f"建议调整热量{cal_adj:.0f}千卡，生成结构化计划 diff、任务和执行卡片。",
+                input_summary={
+                    "severity": severity,
+                    "calorie_deviation_pct": cal_dev,
+                    "patterns": patterns,
+                },
+                output_summary={
+                    "plan_diff": len(plan_diff),
+                    "safety_warnings": len(safety_warnings),
+                    "missions": len(missions),
+                    "action_cards": len(action_cards),
+                },
+                confidence=0.86 if smart_suggestions else 0.76,
+                started_at=started_at,
+                elapsed_ms=duration_ms(started),
+            ),
+        ),
     }

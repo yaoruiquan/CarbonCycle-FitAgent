@@ -2,8 +2,10 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { chatApi } from "@/lib/api";
+import { AgentRunPanel } from "@/components/AgentRunPanel";
+import { agentApi, chatApi } from "@/lib/api";
 import { userStorage } from "@/lib/storage";
+import { AgentRunResult } from "@/lib/types";
 
 interface Message {
     id?: string;
@@ -37,7 +39,10 @@ export default function ChatPage() {
     ]);
     const [input, setInput] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [agentLoading, setAgentLoading] = useState(false);
     const [sessionId, setSessionId] = useState<string | null>(null);
+    const [agentRun, setAgentRun] = useState<AgentRunResult | null>(null);
+    const [showAgentPanel, setShowAgentPanel] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -90,6 +95,16 @@ export default function ChatPage() {
                         };
                         return updated;
                     });
+                } else if (chunk.type === "actions") {
+                    setMessages(prev => {
+                        const updated = [...prev];
+                        const lastIndex = updated.length - 1;
+                        updated[lastIndex] = {
+                            ...updated[lastIndex],
+                            actions: chunk.actions
+                        };
+                        return updated;
+                    });
                 } else if (chunk.type === "done") {
                     // Mark as complete
                     setMessages(prev => {
@@ -130,6 +145,33 @@ export default function ChatPage() {
             router.push(action.data.route as string);
         } else if (action.data?.action === "open_food_modal") {
             // TODO: Open food modal
+        } else if (action.data?.action === "run_agent") {
+            runAgentFromChat(String(action.data.trigger || "chat_action"));
+        } else if (action.type === "open_agent_trace") {
+            setShowAgentPanel(true);
+        }
+    };
+
+    const runAgentFromChat = async (trigger: string) => {
+        const userId = userStorage.getUserId();
+        if (!userId || agentLoading) return;
+        setAgentLoading(true);
+        try {
+            const result = await agentApi.run(userId, trigger);
+            setAgentRun(result);
+            setShowAgentPanel(true);
+            setMessages(prev => [...prev, {
+                role: "assistant",
+                content: `Agent 已完成本次分析：${result.reflection_summary || "已生成运行轨迹、任务和可执行动作。"}`,
+                actions: result.action_cards,
+            }]);
+        } catch (error) {
+            setMessages(prev => [...prev, {
+                role: "assistant",
+                content: error instanceof Error ? `Agent 运行失败：${error.message}` : "Agent 运行失败。",
+            }]);
+        } finally {
+            setAgentLoading(false);
         }
     };
 
@@ -166,7 +208,7 @@ export default function ChatPage() {
     };
 
     return (
-        <div className="h-[calc(100vh-6rem)] p-4 max-w-4xl mx-auto flex flex-col gap-4">
+        <div className="h-[calc(100vh-6rem)] p-4 max-w-6xl mx-auto flex flex-col gap-4">
             {/* Header */}
             <div className="flex items-center justify-between py-2">
                 <div>
@@ -187,7 +229,8 @@ export default function ChatPage() {
             </div>
 
             {/* Chat Area */}
-            <div className="flex-1 glass-card p-6 flex flex-col relative overflow-hidden backdrop-blur-2xl bg-white/70">
+            <div className="flex-1 grid gap-4 overflow-hidden lg:grid-cols-[minmax(0,1fr)_420px]">
+            <div className="glass-card p-6 flex flex-col relative overflow-hidden backdrop-blur-2xl bg-white/70">
                 <div className="absolute inset-0 opacity-5 bg-[url('/images/bg-texture.png')] bg-cover mix-blend-overlay" />
 
                 <div ref={scrollRef} className="flex-1 overflow-y-auto no-scrollbar space-y-4 px-2 pb-4 relative z-10">
@@ -216,14 +259,13 @@ export default function ChatPage() {
                                                 <button
                                                     key={j}
                                                     onClick={() => handleActionCard(action)}
-                                                    className="w-full text-left px-3 py-2 bg-primary/5 hover:bg-primary/10 rounded-lg transition-colors flex items-center gap-2"
+                                                    disabled={agentLoading}
+                                                    className="w-full text-left px-3 py-2 bg-primary/5 hover:bg-primary/10 rounded-lg transition-colors flex items-center gap-2 disabled:opacity-60"
                                                 >
                                                     <span className="text-primary font-medium text-sm">
                                                         {action.title}
                                                     </span>
-                                                    <span className="text-xs text-muted-foreground">
-                                                        →
-                                                    </span>
+                                                    <span className="text-xs text-muted-foreground">→</span>
                                                 </button>
                                             ))}
                                         </div>
@@ -289,6 +331,14 @@ export default function ChatPage() {
                         </button>
                     </div>
                 </div>
+            </div>
+            <div className={`${showAgentPanel ? "block" : "hidden"} min-h-0 lg:block`}>
+                <AgentRunPanel
+                    run={agentRun}
+                    userId={userStorage.getUserId()}
+                    onClose={() => setShowAgentPanel(false)}
+                />
+            </div>
             </div>
         </div>
     );

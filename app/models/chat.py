@@ -49,6 +49,9 @@ class ActionType(str, Enum):
     """Types of suggested actions."""
     
     ADJUST_PLAN = "adjust_plan"
+    APPLY_PLAN_DIFF = "apply_plan_diff"
+    CREATE_MISSIONS = "create_missions"
+    OPEN_AGENT_TRACE = "open_agent_trace"
     LOG_FOOD = "log_food"
     LOG_TRAINING = "log_training"
     VIEW_REPORT = "view_report"

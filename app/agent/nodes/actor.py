@@ -11,6 +11,14 @@ import json
 from typing import Any, Optional
 
 from app.agent.state import AgentState, LogContext
+from app.agent.trace import (
+    append_tool_trace,
+    append_trace,
+    duration_ms,
+    make_step_trace,
+    make_tool_trace,
+    start_timer,
+)
 from app.core.logging import get_logger, log_agent_decision
 from app.llm.client import get_llm_client, ModelType
 from app.llm.tools import get_tool_definitions
@@ -45,7 +53,7 @@ async def _run_tool_calling_loop(
     messages: list[dict[str, Any]],
     db_session: Any,
     tool_names: Optional[list[str]] = None,
-) -> dict[str, Any]:
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     """
     Run a function calling loop with the LLM.
     执行 LLM 工具调用循环
@@ -61,13 +69,14 @@ async def _run_tool_calling_loop(
         tool_names: Specific tools to make available.
 
     Returns:
-        Final LLM response dict.
+        Tuple of final LLM response dict and observable tool traces.
     """
     from app.llm.tool_executor import ToolExecutor
 
     llm = get_llm_client()
     tools = get_tool_definitions(tool_names)
     executor = ToolExecutor(db_session)
+    traces: list[dict[str, Any]] = []
 
     for iteration in range(MAX_TOOL_ITERATIONS):
         response = await llm.chat(
@@ -80,7 +89,7 @@ async def _run_tool_calling_loop(
         tool_calls = response.get("tool_calls")
         if not tool_calls:
             # LLM returned a text response — done
-            return response
+            return response, traces
 
         logger.info(
             f"Tool calling iteration {iteration + 1}: "
@@ -108,7 +117,22 @@ async def _run_tool_calling_loop(
                 func_args = {}
 
             logger.info(f"Executing tool: {func_name}({json.dumps(func_args, ensure_ascii=False)[:200]})")
+            tool_started = start_timer()[1]
             result = await executor.execute(func_name, func_args)
+            try:
+                parsed_result = json.loads(result)
+            except json.JSONDecodeError:
+                parsed_result = {"raw": result}
+            traces.append(
+                make_tool_trace(
+                    tool_name=func_name,
+                    arguments=func_args,
+                    result=parsed_result,
+                    status="error" if isinstance(parsed_result, dict) and parsed_result.get("error") else "success",
+                    elapsed_ms=duration_ms(tool_started),
+                    error=parsed_result.get("error") if isinstance(parsed_result, dict) else None,
+                )
+            )
 
             messages.append({
                 "role": "tool",
@@ -118,7 +142,7 @@ async def _run_tool_calling_loop(
 
     # If we exhaust iterations, return the last response
     logger.warning(f"Tool calling loop exhausted after {MAX_TOOL_ITERATIONS} iterations")
-    return response
+    return response, traces
 
 
 async def act_node(state: AgentState) -> dict[str, Any]:
@@ -135,6 +159,7 @@ async def act_node(state: AgentState) -> dict[str, Any]:
         Updated state with actor_output.
     """
     logger.info(f"Actor node executing for run {state.get('run_id')}")
+    started_at, started = start_timer()
     
     logs = state.get("logs", [])
     parsed = _parse_log_data(logs)
@@ -142,6 +167,7 @@ async def act_node(state: AgentState) -> dict[str, Any]:
     # If we have a db session, try function calling for enhanced analysis
     db_session = state.get("db_session")
     tool_analysis = None
+    tool_traces: list[dict[str, Any]] = []
 
     if db_session and state.get("user"):
         user = state["user"]
@@ -170,11 +196,21 @@ async def act_node(state: AgentState) -> dict[str, Any]:
         ]
 
         try:
-            response = await _run_tool_calling_loop(messages, db_session)
+            response, tool_traces = await _run_tool_calling_loop(messages, db_session)
             tool_analysis = response.get("content")
             logger.info("Actor tool calling analysis completed")
         except Exception as e:
             logger.warning(f"Tool calling analysis failed, using basic parsing: {e}")
+            tool_traces.append(
+                make_tool_trace(
+                    tool_name="actor_tool_loop",
+                    arguments={"user_id": user.get("user_id")},
+                    result={},
+                    status="error",
+                    elapsed_ms=0,
+                    error=str(e),
+                )
+            )
 
     log_agent_decision(
         logger,
@@ -187,5 +223,26 @@ async def act_node(state: AgentState) -> dict[str, Any]:
     result = {"actor_output": parsed}
     if tool_analysis:
         result["actor_output"]["tool_analysis"] = tool_analysis
+    result["trace"] = append_trace(
+        state,
+        make_step_trace(
+            node="actor",
+            title="执行数据分析",
+            status=parsed.get("status", "unknown"),
+            decision="parse_execution_with_tools" if tool_analysis else "parse_execution",
+            reasoning=f"解析了{len(logs)}条饮食记录，并尝试结合工具分析。" if db_session else f"解析了{len(logs)}条饮食记录。",
+            input_summary={"logs_count": len(logs), "has_db_session": bool(db_session)},
+            output_summary={
+                "meal_count": parsed.get("meal_count", 0),
+                "training_completed": parsed.get("training_completed"),
+                "tool_calls": len(tool_traces),
+            },
+            confidence=0.86 if tool_analysis else 0.72,
+            started_at=started_at,
+            elapsed_ms=duration_ms(started),
+        ),
+    )
+    if tool_traces:
+        result["tool_trace"] = append_tool_trace(state, tool_traces)
 
     return result

@@ -12,6 +12,7 @@ Enhanced with multi-day trend analysis and LLM insights.
 from typing import Any, Optional
 
 from app.agent.state import AgentState, ReflectionResult
+from app.agent.trace import append_trace, duration_ms, make_step_trace, start_timer
 from app.core.logging import get_logger, log_agent_decision
 from app.llm.client import get_llm_client
 
@@ -172,6 +173,7 @@ async def reflect_node(state: AgentState) -> dict[str, Any]:
         Updated state with reflection result.
     """
     logger.info(f"Reflector node executing for run {state.get('run_id')}")
+    started_at, started = start_timer()
     
     plan = state.get("plan") or {}
     actor_output = state.get("actor_output") or {}
@@ -186,18 +188,34 @@ async def reflect_node(state: AgentState) -> dict[str, Any]:
             "trend_direction": "insufficient_data",
         }
         
+        reflection = ReflectionResult(
+            severity="none",
+            deviation_type="no_data",
+            calorie_deviation_pct=0,
+            protein_deviation_pct=0,
+            needs_adjustment=False,
+            patterns=[],
+        )
         return {
-            "reflection": ReflectionResult(
-                severity="none",
-                deviation_type="no_data",
-                calorie_deviation_pct=0,
-                protein_deviation_pct=0,
-                needs_adjustment=False,
-                patterns=[],
-            ),
+            "reflection": reflection,
             "should_adjust": False,
             "reflection_summary": "没有足够的执行数据进行反思分析。",
             "trends": trends,
+            "trace": append_trace(
+                state,
+                make_step_trace(
+                    node="reflector",
+                    title="执行反思",
+                    status="no_data",
+                    decision="skip_adjustment",
+                    reasoning="缺少有效饮食执行数据，仅保留趋势占位分析。",
+                    input_summary={"logs_count": len(logs)},
+                    output_summary={"needs_adjustment": False, "trends": trends},
+                    confidence=0.7,
+                    started_at=started_at,
+                    elapsed_ms=duration_ms(started),
+                ),
+            ),
         }
     
     intake = actor_output.get("actual_intake") or {}
@@ -268,4 +286,27 @@ async def reflect_node(state: AgentState) -> dict[str, Any]:
         "should_adjust": needs_adjustment,
         "reflection_summary": summary,
         "trends": trends,
+        "trace": append_trace(
+            state,
+            make_step_trace(
+                node="reflector",
+                title="执行反思",
+                status="success",
+                decision=f"severity_{severity}",
+                reasoning=f"热量偏差{cal_dev:.1f}%，蛋白质偏差{protein_dev:.1f}%，趋势为{trends.get('trend_direction', '未知') if trends else '未知'}。",
+                input_summary={
+                    "target_calories": target_cal,
+                    "target_protein": target_protein,
+                    "logs_count": len(logs),
+                },
+                output_summary={
+                    "deviation_type": deviation_type,
+                    "needs_adjustment": needs_adjustment,
+                    "patterns": patterns,
+                },
+                confidence=0.84 if trends.get("has_trend") else 0.74,
+                started_at=started_at,
+                elapsed_ms=duration_ms(started),
+            ),
+        ),
     }
