@@ -91,6 +91,9 @@ class ToolTrace(TypedDict, total=False):
     status: str
     duration_ms: int
     error: Optional[str]
+    permission: str
+    policy_decision: str
+    policy_version: str
 
 
 class PlanDiffItem(TypedDict, total=False):
@@ -191,3 +194,8 @@ class AgentState(TypedDict, total=False):
     action_cards: list[AgentActionCard]
     memory_context: dict[str, Any]
     evaluation_summary: dict[str, Any]
+    model_status: dict[str, Any]
+    verification_status: str
+    verification_findings: list[dict[str, Any]]
+    harness_score: int
+    harness_episode: dict[str, Any]

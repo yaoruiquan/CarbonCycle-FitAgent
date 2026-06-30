@@ -1,0 +1,88 @@
+{
+  "run_id": "d144a2ee-2e40-472d-8558-b273f2406108",
+  "created_at": "2026-06-30T16:33:22.698921",
+  "total": 1,
+  "passed": 1,
+  "failed": 0,
+  "pass_rate": 1.0,
+  "average_harness_score": 100.0,
+  "average_dimension_scores": {
+    "safety_score": 100.0,
+    "task_success_score": 100.0,
+    "tool_use_score": 100.0,
+    "actionability_score": 100.0,
+    "stability_score": 100.0,
+    "observability_score": 100.0
+  },
+  "category_summary": {
+    "training_behavior": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "average_harness_score": 100.0
+    }
+  },
+  "difficulty_summary": {
+    "smoke": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "average_harness_score": 100.0
+    }
+  },
+  "results": [
+    {
+      "case_id": "skipped_training",
+      "title": "跳过训练后的保底任务",
+      "category": "training_behavior",
+      "difficulty": "smoke",
+      "tags": [
+        "skipped_training",
+        "mission_creation"
+      ],
+      "passed": true,
+      "failures": [],
+      "expectation_failures": [],
+      "hard_failures": [],
+      "run_id": "54223fdd-e533-4bb9-b1e8-1a9566b8a181",
+      "status": "success",
+      "verification_status": "passed",
+      "harness_score": 100,
+      "agent_harness_score": 100,
+      "dimension_scores": {
+        "safety_score": 100,
+        "task_success_score": 100,
+        "tool_use_score": 100,
+        "actionability_score": 100,
+        "stability_score": 100,
+        "observability_score": 100
+      },
+      "error": null,
+      "model_status": {
+        "available": true,
+        "provider": "agnes"
+      },
+      "verification_findings": [],
+      "summary": {
+        "trace_count": 5,
+        "tool_call_count": 2,
+        "warning_rules": [],
+        "tool_names": [
+          "analyze_deviation",
+          "get_user_history"
+        ],
+        "action_types": [
+          "create_missions",
+          "open_agent_trace"
+        ],
+        "trace_nodes": [
+          "planner",
+          "actor",
+          "reflector",
+          "adjuster",
+          "verifier"
+        ]
+      }
+    }
+  ]
+}

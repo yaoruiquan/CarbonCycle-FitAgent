@@ -14,7 +14,7 @@ from app.core.logging import get_logger
 logger = get_logger(__name__)
 
 
-def should_continue_to_reflect(state: AgentState) -> Literal["reflect", "end"]:
+def should_continue_to_reflect(state: AgentState) -> Literal["reflect", "verify"]:
     """
     Determine if we should proceed to reflection.
     
@@ -22,21 +22,21 @@ def should_continue_to_reflect(state: AgentState) -> Literal["reflect", "end"]:
         state: Current agent state.
         
     Returns:
-        "reflect" to continue, "end" if error or no data.
+        "reflect" to continue, "verify" if error or no data.
     """
     if state.get("error"):
-        logger.info("Routing to end due to error")
-        return "end"
+        logger.info("Routing to verifier due to error")
+        return "verify"
     
     actor_output = state.get("actor_output") or {}
     if actor_output.get("status") == "no_data":
-        logger.info("Routing to end due to no data")
-        return "end"
+        logger.info("Routing to verifier due to no data")
+        return "verify"
     
     return "reflect"
 
 
-def should_adjust(state: AgentState) -> Literal["adjust", "end"]:
+def should_adjust(state: AgentState) -> Literal["adjust", "verify"]:
     """
     Determine if adjustment is needed.
     
@@ -44,17 +44,17 @@ def should_adjust(state: AgentState) -> Literal["adjust", "end"]:
         state: Current agent state.
         
     Returns:
-        "adjust" if adjustment needed, "end" otherwise.
+        "adjust" if adjustment needed, "verify" otherwise.
     """
     if state.get("error"):
-        return "end"
+        return "verify"
     
     if state.get("should_adjust", False):
         logger.info("Routing to adjust based on reflection")
         return "adjust"
     
-    logger.info("No adjustment needed, routing to end")
-    return "end"
+    logger.info("No adjustment needed, routing to verifier")
+    return "verify"
 
 
 def check_iteration_limit(state: AgentState) -> Literal["continue", "end"]:
@@ -91,6 +91,10 @@ def should_skip_after_planner(state: AgentState) -> Literal["skip", "continue"]:
         "skip" to end after planner, "continue" to proceed to actor.
     """
     trigger = state.get("trigger", "")
+
+    if state.get("error"):
+        logger.info("Skipping downstream nodes because planner returned an error")
+        return "skip"
     
     # Triggers that only need planner output
     planner_only_triggers = {"create_plan", "plan_only", "generate_plan"}

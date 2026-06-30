@@ -1,0 +1,38 @@
+{
+  "id": "no_logs_checkin",
+  "title": "无日志时保持轻量跟踪",
+  "category": "data_quality",
+  "difficulty": "smoke",
+  "tags": ["missing_logs", "checkin"],
+  "trigger": "harness_case",
+  "user_context": {
+    "user_id": "harness-user",
+    "name": "Harness User",
+    "gender": "male",
+    "age": 28,
+    "height_cm": 174,
+    "goal": "muscle_gain",
+    "weight_kg": 72,
+    "target_weight_kg": 76,
+    "activity_level": "moderate",
+    "training_days": 4,
+    "tdee": 2500,
+    "dietary_preferences": "无特殊限制"
+  },
+  "plan_context": {
+    "plan_id": "harness-plan",
+    "start_date": "2026-06-15",
+    "current_day": 4,
+    "day_type": "medium_carb",
+    "target_calories": 2700,
+    "target_protein": 150,
+    "target_carbs": 330,
+    "target_fat": 80,
+    "cycle_length": 7
+  },
+  "logs": [],
+  "expectations": {
+    "expected_verification_status": "passed",
+    "minimum_harness_score": 70
+  }
+}

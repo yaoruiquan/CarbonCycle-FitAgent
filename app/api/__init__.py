@@ -18,6 +18,7 @@ from app.api.report import router as report_router
 from app.api.food import router as food_router
 from app.api.chat import router as chat_router
 from app.api.weight import router as weight_router
+from app.api.harness import router as harness_router
 
 api_router = APIRouter()
 
@@ -31,7 +32,7 @@ api_router.include_router(agent_router, prefix="/agent", tags=["agent"])
 api_router.include_router(report_router, prefix="/reports", tags=["reports"])
 api_router.include_router(food_router, prefix="/food", tags=["food"])
 api_router.include_router(chat_router, prefix="/chat", tags=["chat"])
+api_router.include_router(harness_router, prefix="/harness", tags=["harness"])
 
 __all__ = ["api_router"]
-
 

@@ -1,0 +1,131 @@
+{
+  "run_id": "2115299a-fab8-4612-9173-b237924bbaa9",
+  "created_at": "2026-06-29T21:06:13.550145",
+  "total": 1,
+  "passed": 0,
+  "failed": 1,
+  "pass_rate": 0.0,
+  "average_harness_score": 0.0,
+  "average_dimension_scores": {
+    "safety_score": 0.0,
+    "task_success_score": 0.0,
+    "tool_use_score": 0.0,
+    "actionability_score": 0.0,
+    "stability_score": 0.0,
+    "observability_score": 0.0
+  },
+  "category_summary": {
+    "data_quality": {
+      "total": 1,
+      "passed": 0,
+      "failed": 1,
+      "average_harness_score": 0.0
+    }
+  },
+  "difficulty_summary": {
+    "smoke": {
+      "total": 1,
+      "passed": 0,
+      "failed": 1,
+      "average_harness_score": 0.0
+    }
+  },
+  "results": [
+    {
+      "case_id": "no_logs_checkin",
+      "title": "无日志时保持轻量跟踪",
+      "category": "data_quality",
+      "difficulty": "smoke",
+      "tags": [
+        "missing_logs",
+        "checkin"
+      ],
+      "passed": false,
+      "failures": [
+        "Model provider unavailable (provider_error): name 'plan' is not defined"
+      ],
+      "expectation_failures": [
+        {
+          "dimension": "safety_score",
+          "code": "model_provider_unavailable",
+          "message": "Model provider unavailable (provider_error): name 'plan' is not defined",
+          "evidence": {
+            "available": false,
+            "provider": "dashscope",
+            "status_code": null,
+            "code": "provider_error",
+            "type": "provider_error",
+            "message": "name 'plan' is not defined",
+            "request_id": null
+          }
+        }
+      ],
+      "hard_failures": [
+        {
+          "dimension": "safety_score",
+          "code": "model_provider_unavailable",
+          "message": "Model provider unavailable (provider_error): name 'plan' is not defined",
+          "evidence": {
+            "available": false,
+            "provider": "dashscope",
+            "status_code": null,
+            "code": "provider_error",
+            "type": "provider_error",
+            "message": "name 'plan' is not defined",
+            "request_id": null
+          }
+        }
+      ],
+      "run_id": "2e968076-fced-4b5f-83ae-dd1cdc4ab761",
+      "status": "error",
+      "verification_status": "failed",
+      "harness_score": 0,
+      "agent_harness_score": 0,
+      "dimension_scores": {
+        "safety_score": 0,
+        "task_success_score": 0,
+        "tool_use_score": 0,
+        "actionability_score": 0,
+        "stability_score": 0,
+        "observability_score": 0
+      },
+      "error": "name 'plan' is not defined",
+      "model_status": {
+        "available": false,
+        "provider": "dashscope",
+        "status_code": null,
+        "code": "provider_error",
+        "type": "provider_error",
+        "message": "name 'plan' is not defined",
+        "request_id": null
+      },
+      "verification_findings": [
+        {
+          "level": "error",
+          "code": "model_provider_unavailable",
+          "message": "name 'plan' is not defined",
+          "evidence": {
+            "provider": "dashscope",
+            "status_code": null,
+            "provider_code": "provider_error",
+            "request_id": null
+          }
+        }
+      ],
+      "summary": {
+        "trace_count": 3,
+        "tool_call_count": 1,
+        "warning_rules": [],
+        "tool_names": [
+          "actor_tool_loop"
+        ],
+        "action_types": [],
+        "trace_nodes": [
+          "planner",
+          "actor",
+          "verifier"
+        ]
+      }
+    }
+  ]
+}

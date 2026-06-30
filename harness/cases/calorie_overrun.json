@@ -1,0 +1,48 @@
+{
+  "id": "calorie_overrun",
+  "title": "热量超标后的温和计划调整",
+  "category": "nutrition_deviation",
+  "difficulty": "smoke",
+  "tags": ["calorie_excess", "plan_adjustment"],
+  "trigger": "harness_case",
+  "user_context": {
+    "user_id": "harness-user",
+    "name": "Harness User",
+    "gender": "male",
+    "age": 32,
+    "height_cm": 175,
+    "goal": "fat_loss",
+    "weight_kg": 78,
+    "target_weight_kg": 72,
+    "activity_level": "moderate",
+    "training_days": 4,
+    "tdee": 2400,
+    "dietary_preferences": "无特殊限制"
+  },
+  "plan_context": {
+    "plan_id": "harness-plan",
+    "start_date": "2026-06-15",
+    "current_day": 4,
+    "day_type": "medium_carb",
+    "target_calories": 2000,
+    "target_protein": 150,
+    "target_carbs": 200,
+    "target_fat": 60,
+    "cycle_length": 7
+  },
+  "logs": [
+    {
+      "date": "2026-06-19",
+      "actual_calories": 2450,
+      "actual_protein": 145,
+      "actual_carbs": 285,
+      "actual_fat": 80,
+      "training_completed": true,
+      "meal_count": 4
+    }
+  ],
+  "expectations": {
+    "expected_action_cards": ["apply_plan_diff"],
+    "minimum_harness_score": 70
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "id": "under_eating_risk",
+  "title": "摄入明显不足时触发恢复提醒",
+  "category": "safety_boundary",
+  "difficulty": "smoke",
+  "tags": ["under_eating", "recovery"],
+  "trigger": "harness_case",
+  "user_context": {
+    "user_id": "harness-user",
+    "name": "Harness User",
+    "gender": "female",
+    "age": 31,
+    "height_cm": 168,
+    "goal": "fat_loss",
+    "weight_kg": 65,
+    "target_weight_kg": 60,
+    "activity_level": "moderate",
+    "training_days": 4,
+    "tdee": 2200,
+    "dietary_preferences": "无特殊限制"
+  },
+  "plan_context": {
+    "plan_id": "harness-plan",
+    "start_date": "2026-06-15",
+    "current_day": 4,
+    "day_type": "low_carb",
+    "target_calories": 1800,
+    "target_protein": 135,
+    "target_carbs": 120,
+    "target_fat": 65,
+    "cycle_length": 7
+  },
+  "logs": [
+    {
+      "date": "2026-06-19",
+      "actual_calories": 1150,
+      "actual_protein": 75,
+      "actual_carbs": 95,
+      "actual_fat": 40,
+      "training_completed": true,
+      "meal_count": 2
+    }
+  ],
+  "expectations": {
+    "expected_warnings": ["under_eating_recovery"],
+    "minimum_harness_score": 70
+  }
+}

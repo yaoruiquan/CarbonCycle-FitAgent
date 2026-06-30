@@ -1,0 +1,131 @@
+{
+  "run_id": "64713045-aab7-49d1-8618-69edbd834003",
+  "created_at": "2026-06-29T18:35:41.911638",
+  "total": 1,
+  "passed": 0,
+  "failed": 1,
+  "pass_rate": 0.0,
+  "average_harness_score": 0.0,
+  "average_dimension_scores": {
+    "safety_score": 0.0,
+    "task_success_score": 0.0,
+    "tool_use_score": 0.0,
+    "actionability_score": 0.0,
+    "stability_score": 0.0,
+    "observability_score": 0.0
+  },
+  "category_summary": {
+    "data_quality": {
+      "total": 1,
+      "passed": 0,
+      "failed": 1,
+      "average_harness_score": 0.0
+    }
+  },
+  "difficulty_summary": {
+    "smoke": {
+      "total": 1,
+      "passed": 0,
+      "failed": 1,
+      "average_harness_score": 0.0
+    }
+  },
+  "results": [
+    {
+      "case_id": "no_logs_checkin",
+      "title": "无日志时保持轻量跟踪",
+      "category": "data_quality",
+      "difficulty": "smoke",
+      "tags": [
+        "missing_logs",
+        "checkin"
+      ],
+      "passed": false,
+      "failures": [
+        "Model provider unavailable (missing_api_key): 未配置 gemini API key。"
+      ],
+      "expectation_failures": [
+        {
+          "dimension": "safety_score",
+          "code": "model_provider_unavailable",
+          "message": "Model provider unavailable (missing_api_key): 未配置 gemini API key。",
+          "evidence": {
+            "available": false,
+            "provider": "gemini",
+            "status_code": null,
+            "code": "missing_api_key",
+            "type": "configuration_error",
+            "message": "未配置 gemini API key。",
+            "request_id": null
+          }
+        }
+      ],
+      "hard_failures": [
+        {
+          "dimension": "safety_score",
+          "code": "model_provider_unavailable",
+          "message": "Model provider unavailable (missing_api_key): 未配置 gemini API key。",
+          "evidence": {
+            "available": false,
+            "provider": "gemini",
+            "status_code": null,
+            "code": "missing_api_key",
+            "type": "configuration_error",
+            "message": "未配置 gemini API key。",
+            "request_id": null
+          }
+        }
+      ],
+      "run_id": "aa37f8c4-5c42-4613-a5aa-bb7fd0782dee",
+      "status": "error",
+      "verification_status": "failed",
+      "harness_score": 0,
+      "agent_harness_score": 0,
+      "dimension_scores": {
+        "safety_score": 0,
+        "task_success_score": 0,
+        "tool_use_score": 0,
+        "actionability_score": 0,
+        "stability_score": 0,
+        "observability_score": 0
+      },
+      "error": "未配置 gemini API key。",
+      "model_status": {
+        "available": false,
+        "provider": "gemini",
+        "status_code": null,
+        "code": "missing_api_key",
+        "type": "configuration_error",
+        "message": "未配置 gemini API key。",
+        "request_id": null
+      },
+      "verification_findings": [
+        {
+          "level": "error",
+          "code": "model_provider_unavailable",
+          "message": "未配置 gemini API key。",
+          "evidence": {
+            "provider": "gemini",
+            "status_code": null,
+            "provider_code": "missing_api_key",
+            "request_id": null
+          }
+        }
+      ],
+      "summary": {
+        "trace_count": 3,
+        "tool_call_count": 1,
+        "warning_rules": [],
+        "tool_names": [
+          "actor_tool_loop"
+        ],
+        "action_types": [],
+        "trace_nodes": [
+          "planner",
+          "actor",
+          "verifier"
+        ]
+      }
+    }
+  ]
+}

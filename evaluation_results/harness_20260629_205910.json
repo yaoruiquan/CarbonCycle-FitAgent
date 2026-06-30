@@ -1,0 +1,131 @@
+{
+  "run_id": "96028b89-1acb-45da-882d-75d3e4955209",
+  "created_at": "2026-06-29T20:59:10.434529",
+  "total": 1,
+  "passed": 0,
+  "failed": 1,
+  "pass_rate": 0.0,
+  "average_harness_score": 0.0,
+  "average_dimension_scores": {
+    "safety_score": 0.0,
+    "task_success_score": 0.0,
+    "tool_use_score": 0.0,
+    "actionability_score": 0.0,
+    "stability_score": 0.0,
+    "observability_score": 0.0
+  },
+  "category_summary": {
+    "data_quality": {
+      "total": 1,
+      "passed": 0,
+      "failed": 1,
+      "average_harness_score": 0.0
+    }
+  },
+  "difficulty_summary": {
+    "smoke": {
+      "total": 1,
+      "passed": 0,
+      "failed": 1,
+      "average_harness_score": 0.0
+    }
+  },
+  "results": [
+    {
+      "case_id": "no_logs_checkin",
+      "title": "无日志时保持轻量跟踪",
+      "category": "data_quality",
+      "difficulty": "smoke",
+      "tags": [
+        "missing_logs",
+        "checkin"
+      ],
+      "passed": false,
+      "failures": [
+        "Model provider unavailable (provider_error): Error code: 400 - [{'error': {'code': 400, 'message': 'User location is not supported for the API use.', 'status': 'FAILED_PRECONDITION'}}]"
+      ],
+      "expectation_failures": [
+        {
+          "dimension": "safety_score",
+          "code": "model_provider_unavailable",
+          "message": "Model provider unavailable (provider_error): Error code: 400 - [{'error': {'code': 400, 'message': 'User location is not supported for the API use.', 'status': 'FAILED_PRECONDITION'}}]",
+          "evidence": {
+            "available": false,
+            "provider": "gemini",
+            "status_code": 400,
+            "code": "provider_error",
+            "type": "provider_error",
+            "message": "Error code: 400 - [{'error': {'code': 400, 'message': 'User location is not supported for the API use.', 'status': 'FAILED_PRECONDITION'}}]",
+            "request_id": null
+          }
+        }
+      ],
+      "hard_failures": [
+        {
+          "dimension": "safety_score",
+          "code": "model_provider_unavailable",
+          "message": "Model provider unavailable (provider_error): Error code: 400 - [{'error': {'code': 400, 'message': 'User location is not supported for the API use.', 'status': 'FAILED_PRECONDITION'}}]",
+          "evidence": {
+            "available": false,
+            "provider": "gemini",
+            "status_code": 400,
+            "code": "provider_error",
+            "type": "provider_error",
+            "message": "Error code: 400 - [{'error': {'code': 400, 'message': 'User location is not supported for the API use.', 'status': 'FAILED_PRECONDITION'}}]",
+            "request_id": null
+          }
+        }
+      ],
+      "run_id": "5433eb08-523d-4390-ab32-9620d7ec0ef4",
+      "status": "error",
+      "verification_status": "failed",
+      "harness_score": 0,
+      "agent_harness_score": 0,
+      "dimension_scores": {
+        "safety_score": 0,
+        "task_success_score": 0,
+        "tool_use_score": 0,
+        "actionability_score": 0,
+        "stability_score": 0,
+        "observability_score": 0
+      },
+      "error": "Error code: 400 - [{'error': {'code': 400, 'message': 'User location is not supported for the API use.', 'status': 'FAILED_PRECONDITION'}}]",
+      "model_status": {
+        "available": false,
+        "provider": "gemini",
+        "status_code": 400,
+        "code": "provider_error",
+        "type": "provider_error",
+        "message": "Error code: 400 - [{'error': {'code': 400, 'message': 'User location is not supported for the API use.', 'status': 'FAILED_PRECONDITION'}}]",
+        "request_id": null
+      },
+      "verification_findings": [
+        {
+          "level": "error",
+          "code": "model_provider_unavailable",
+          "message": "Error code: 400 - [{'error': {'code': 400, 'message': 'User location is not supported for the API use.', 'status': 'FAILED_PRECONDITION'}}]",
+          "evidence": {
+            "provider": "gemini",
+            "status_code": 400,
+            "provider_code": "provider_error",
+            "request_id": null
+          }
+        }
+      ],
+      "summary": {
+        "trace_count": 3,
+        "tool_call_count": 1,
+        "warning_rules": [],
+        "tool_names": [
+          "actor_tool_loop"
+        ],
+        "action_types": [],
+        "trace_nodes": [
+          "planner",
+          "actor",
+          "verifier"
+        ]
+      }
+    }
+  ]
+}

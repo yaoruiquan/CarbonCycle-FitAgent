@@ -10,9 +10,12 @@ from sqlalchemy.orm import selectinload
 
 from app.agent import run_agent
 from app.core.database import get_db
+from app.core.config import get_settings
 from app.db.db_storage import DatabaseStorage
 from app.db.models import AgentMissionModel, PlanModel
 from app.core.logging import get_logger
+from app.llm.client import ModelType, get_llm_client, resolve_llm_provider_settings
+from app.llm.errors import LLMProviderError, classify_llm_exception
 from app.services.agent_observability import AgentObservabilityService
 
 logger = get_logger(__name__)
@@ -52,6 +55,11 @@ class AgentResultResponse(BaseModel):
     action_cards: list[dict[str, Any]] = []
     memory_context: dict[str, Any] = {}
     evaluation_summary: dict[str, Any] = {}
+    model_status: dict[str, Any] = {}
+    verification_status: Optional[str] = None
+    verification_findings: list[dict[str, Any]] = []
+    harness_score: int = 0
+    harness_episode: dict[str, Any] = {}
     error: Optional[str] = None
 
 
@@ -164,6 +172,11 @@ def _result_response(result: dict[str, Any]) -> AgentResultResponse:
         action_cards=result.get("action_cards") or [],
         memory_context=result.get("memory_context") or {},
         evaluation_summary=result.get("evaluation_summary") or {},
+        model_status=result.get("model_status") or {},
+        verification_status=result.get("verification_status"),
+        verification_findings=result.get("verification_findings") or [],
+        harness_score=int(result.get("harness_score") or 0),
+        harness_episode=result.get("harness_episode") or (result.get("evaluation_summary") or {}).get("harness_episode") or {},
         error=result.get("error"),
     )
 
@@ -209,6 +222,48 @@ async def run_agent_sync(request: AgentTriggerRequest, db: AsyncSession = Depend
     )
     persisted = await observability.persist_run(str(request.user_id), request.trigger, result)
     return _result_response(persisted)
+
+
+@router.get("/model-health")
+async def get_model_health() -> dict[str, Any]:
+    """Check whether the configured LLM provider can answer a minimal request."""
+    settings = get_settings()
+    provider_settings = resolve_llm_provider_settings(settings)
+    base = {
+        "configured": bool(provider_settings["api_key"]),
+        "provider": provider_settings["provider"],
+        "base_url": provider_settings["base_url"],
+        "models": {
+            "brain": provider_settings["model_brain"],
+            "chat": provider_settings["model_chat"],
+            "vision": provider_settings["model_vision"],
+        },
+    }
+    if not provider_settings["api_key"]:
+        return {
+            **base,
+            "available": False,
+            "code": "missing_api_key",
+            "message": "未配置 LLM_API_KEY 或对应 provider 的 API key。",
+        }
+
+    try:
+        llm = get_llm_client()
+        response = await llm.chat(
+            [{"role": "user", "content": "ping"}],
+            model_type=ModelType.CHAT,
+            temperature=0,
+            max_tokens=8,
+        )
+        return {
+            **base,
+            "available": True,
+            "model": response.get("model"),
+            "usage": response.get("usage"),
+        }
+    except Exception as exc:
+        provider_error = exc if isinstance(exc, LLMProviderError) else classify_llm_exception(exc)
+        return {**base, **provider_error.to_dict()}
 
 
 @router.post("/trigger", response_model=AgentRunResponse)

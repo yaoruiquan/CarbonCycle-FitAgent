@@ -18,6 +18,8 @@ from app.llm.client import get_llm_client
 
 logger = get_logger(__name__)
 
+MISSION_TRIGGER_PATTERNS = {"蛋白质摄入不足", "训练计划执行率低"}
+
 
 def _calculate_deviation(target: float, actual: float) -> float:
     """Calculate percentage deviation."""
@@ -259,6 +261,9 @@ async def reflect_node(state: AgentState) -> dict[str, Any]:
     if trends and trends.get("trend_direction") == "worsening" and severity == "minor":
         needs_adjustment = True
         patterns.append("趋势恶化")
+
+    if any(pattern in MISSION_TRIGGER_PATTERNS for pattern in patterns):
+        needs_adjustment = True
     
     reflection = ReflectionResult(
         severity=severity,

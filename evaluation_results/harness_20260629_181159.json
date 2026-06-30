@@ -1,0 +1,131 @@
+{
+  "run_id": "83f6b2a1-1804-48ef-86e5-07a1a711de19",
+  "created_at": "2026-06-29T18:11:59.607156",
+  "total": 1,
+  "passed": 0,
+  "failed": 1,
+  "pass_rate": 0.0,
+  "average_harness_score": 0.0,
+  "average_dimension_scores": {
+    "safety_score": 0.0,
+    "task_success_score": 0.0,
+    "tool_use_score": 0.0,
+    "actionability_score": 0.0,
+    "stability_score": 0.0,
+    "observability_score": 0.0
+  },
+  "category_summary": {
+    "data_quality": {
+      "total": 1,
+      "passed": 0,
+      "failed": 1,
+      "average_harness_score": 0.0
+    }
+  },
+  "difficulty_summary": {
+    "smoke": {
+      "total": 1,
+      "passed": 0,
+      "failed": 1,
+      "average_harness_score": 0.0
+    }
+  },
+  "results": [
+    {
+      "case_id": "no_logs_checkin",
+      "title": "无日志时保持轻量跟踪",
+      "category": "data_quality",
+      "difficulty": "smoke",
+      "tags": [
+        "missing_logs",
+        "checkin"
+      ],
+      "passed": false,
+      "failures": [
+        "Model provider unavailable (Arrearage): 模型供应商拒绝请求：DashScope/百炼账号欠费或账户状态异常，请处理账单后重试。"
+      ],
+      "expectation_failures": [
+        {
+          "dimension": "safety_score",
+          "code": "model_provider_unavailable",
+          "message": "Model provider unavailable (Arrearage): 模型供应商拒绝请求：DashScope/百炼账号欠费或账户状态异常，请处理账单后重试。",
+          "evidence": {
+            "available": false,
+            "provider": "dashscope",
+            "status_code": 400,
+            "code": "Arrearage",
+            "type": "Arrearage",
+            "message": "模型供应商拒绝请求：DashScope/百炼账号欠费或账户状态异常，请处理账单后重试。",
+            "request_id": "bc21a5d0-4e2d-93df-a6d7-6df92dfa9433"
+          }
+        }
+      ],
+      "hard_failures": [
+        {
+          "dimension": "safety_score",
+          "code": "model_provider_unavailable",
+          "message": "Model provider unavailable (Arrearage): 模型供应商拒绝请求：DashScope/百炼账号欠费或账户状态异常，请处理账单后重试。",
+          "evidence": {
+            "available": false,
+            "provider": "dashscope",
+            "status_code": 400,
+            "code": "Arrearage",
+            "type": "Arrearage",
+            "message": "模型供应商拒绝请求：DashScope/百炼账号欠费或账户状态异常，请处理账单后重试。",
+            "request_id": "bc21a5d0-4e2d-93df-a6d7-6df92dfa9433"
+          }
+        }
+      ],
+      "run_id": "e82ca339-8cfa-4a0c-ba6d-fa060aa7c369",
+      "status": "error",
+      "verification_status": "failed",
+      "harness_score": 0,
+      "agent_harness_score": 0,
+      "dimension_scores": {
+        "safety_score": 0,
+        "task_success_score": 0,
+        "tool_use_score": 0,
+        "actionability_score": 0,
+        "stability_score": 0,
+        "observability_score": 0
+      },
+      "error": "模型供应商拒绝请求：DashScope/百炼账号欠费或账户状态异常，请处理账单后重试。",
+      "model_status": {
+        "available": false,
+        "provider": "dashscope",
+        "status_code": 400,
+        "code": "Arrearage",
+        "type": "Arrearage",
+        "message": "模型供应商拒绝请求：DashScope/百炼账号欠费或账户状态异常，请处理账单后重试。",
+        "request_id": "bc21a5d0-4e2d-93df-a6d7-6df92dfa9433"
+      },
+      "verification_findings": [
+        {
+          "level": "error",
+          "code": "model_provider_unavailable",
+          "message": "模型供应商拒绝请求：DashScope/百炼账号欠费或账户状态异常，请处理账单后重试。",
+          "evidence": {
+            "provider": "dashscope",
+            "status_code": 400,
+            "provider_code": "Arrearage",
+            "request_id": "bc21a5d0-4e2d-93df-a6d7-6df92dfa9433"
+          }
+        }
+      ],
+      "summary": {
+        "trace_count": 3,
+        "tool_call_count": 1,
+        "warning_rules": [],
+        "tool_names": [
+          "actor_tool_loop"
+        ],
+        "action_types": [],
+        "trace_nodes": [
+          "planner",
+          "actor",
+          "verifier"
+        ]
+      }
+    }
+  ]
+}

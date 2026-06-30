@@ -1,0 +1,93 @@
+{
+  "run_id": "59a45dbd-a444-447a-8251-16fc9a4b2dae",
+  "created_at": "2026-06-30T16:07:50.972079",
+  "total": 1,
+  "passed": 0,
+  "failed": 1,
+  "pass_rate": 0.0,
+  "average_harness_score": 96.0,
+  "average_dimension_scores": {
+    "safety_score": 100.0,
+    "task_success_score": 100.0,
+    "tool_use_score": 100.0,
+    "actionability_score": 70.0,
+    "stability_score": 100.0,
+    "observability_score": 100.0
+  },
+  "category_summary": {
+    "nutrition_deviation": {
+      "total": 1,
+      "passed": 0,
+      "failed": 1,
+      "average_harness_score": 96.0
+    }
+  },
+  "difficulty_summary": {
+    "smoke": {
+      "total": 1,
+      "passed": 0,
+      "failed": 1,
+      "average_harness_score": 96.0
+    }
+  },
+  "results": [
+    {
+      "case_id": "protein_deficit",
+      "title": "蛋白质摄入不足后的任务生成",
+      "category": "nutrition_deviation",
+      "difficulty": "smoke",
+      "tags": [
+        "protein_deficit",
+        "mission_creation"
+      ],
+      "passed": false,
+      "failures": [
+        "Missing expected action card: create_missions"
+      ],
+      "expectation_failures": [
+        {
+          "dimension": "actionability_score",
+          "code": "missing_expected_action_card",
+          "message": "Missing expected action card: create_missions",
+          "evidence": {}
+        }
+      ],
+      "hard_failures": [],
+      "run_id": "368579fc-e10c-4962-9204-8d2e4ef7b6b8",
+      "status": "success",
+      "verification_status": "passed",
+      "harness_score": 96,
+      "agent_harness_score": 100,
+      "dimension_scores": {
+        "safety_score": 100,
+        "task_success_score": 100,
+        "tool_use_score": 100,
+        "actionability_score": 70,
+        "stability_score": 100,
+        "observability_score": 100
+      },
+      "error": null,
+      "model_status": {
+        "available": true,
+        "provider": "agnes"
+      },
+      "verification_findings": [],
+      "summary": {
+        "trace_count": 4,
+        "tool_call_count": 2,
+        "warning_rules": [],
+        "tool_names": [
+          "analyze_deviation",
+          "suggest_adjustment"
+        ],
+        "action_types": [],
+        "trace_nodes": [
+          "planner",
+          "actor",
+          "reflector",
+          "verifier"
+        ]
+      }
+    }
+  ]
+}

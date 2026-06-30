@@ -1,0 +1,48 @@
+{
+  "id": "protein_deficit",
+  "title": "蛋白质摄入不足后的任务生成",
+  "category": "nutrition_deviation",
+  "difficulty": "smoke",
+  "tags": ["protein_deficit", "mission_creation"],
+  "trigger": "harness_case",
+  "user_context": {
+    "user_id": "harness-user",
+    "name": "Harness User",
+    "gender": "female",
+    "age": 29,
+    "height_cm": 166,
+    "goal": "recomposition",
+    "weight_kg": 62,
+    "target_weight_kg": 60,
+    "activity_level": "moderate",
+    "training_days": 4,
+    "tdee": 2100,
+    "dietary_preferences": "无特殊限制"
+  },
+  "plan_context": {
+    "plan_id": "harness-plan",
+    "start_date": "2026-06-15",
+    "current_day": 4,
+    "day_type": "medium_carb",
+    "target_calories": 1850,
+    "target_protein": 130,
+    "target_carbs": 180,
+    "target_fat": 55,
+    "cycle_length": 7
+  },
+  "logs": [
+    {
+      "date": "2026-06-19",
+      "actual_calories": 1780,
+      "actual_protein": 80,
+      "actual_carbs": 210,
+      "actual_fat": 58,
+      "training_completed": true,
+      "meal_count": 3
+    }
+  ],
+  "expectations": {
+    "expected_action_cards": ["create_missions"],
+    "minimum_harness_score": 70
+  }
+}

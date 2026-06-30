@@ -1,0 +1,30 @@
+{
+  "run_id": "1e7a83ff-257f-4059-94f2-e2a3e196b622",
+  "created_at": "2026-06-20T13:15:54.036768",
+  "total": 1,
+  "passed": 0,
+  "failed": 1,
+  "pass_rate": 0.0,
+  "average_harness_score": 0.0,
+  "results": [
+    {
+      "case_id": "calorie_overrun",
+      "title": "热量超标后的温和计划调整",
+      "passed": false,
+      "failures": [
+        "Missing expected action card: apply_plan_diff",
+        "Harness score below minimum: 0 < 70"
+      ],
+      "run_id": "4e979111-3e35-4c07-a520-2a5ab403590b",
+      "status": "success",
+      "verification_status": "",
+      "harness_score": 0,
+      "summary": {
+        "trace_count": 2,
+        "tool_call_count": 1,
+        "warning_rules": [],
+        "action_types": []
+      }
+    }
+  ]
+}

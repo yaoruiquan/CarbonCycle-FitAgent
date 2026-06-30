@@ -10,17 +10,61 @@ Provides unified interface for different LLM models:
 """
 
 import base64
+import re
 from enum import Enum
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Optional, Union
 
+import httpx
 from openai import AsyncOpenAI
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
+from app.llm.errors import LLMProviderError, classify_llm_exception
 
 logger = get_logger(__name__)
+
+
+GEMINI_OPENAI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
+GEMINI_DEFAULT_MODEL = "gemini-2.5-flash"
+DASHSCOPE_DEFAULT_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+AGNES_DEFAULT_BASE_URL = "https://apihub.agnes-ai.com/v1"
+AGNES_DEFAULT_MODEL = "agnes-2.0-flash"
+
+
+def _retry_after_from_message(message: str) -> Optional[float]:
+    match = re.search(r"retry in ([0-9]+(?:\.[0-9]+)?)s", message, flags=re.IGNORECASE)
+    if not match:
+        return None
+    try:
+        return float(match.group(1))
+    except ValueError:
+        return None
+
+
+def _gemini_native_error(data: dict[str, Any], *, status_code: int, provider: str) -> LLMProviderError:
+    error = data.get("error") if isinstance(data.get("error"), dict) else {}
+    message = str(error.get("message") or "Gemini API request failed.")
+    provider_code = str(error.get("status") or error.get("code") or "provider_error")
+    error_type = provider_code
+    code = provider_code
+    if status_code == 401:
+        code = "unauthorized"
+        error_type = "authentication_error"
+        message = "模型供应商认证失败：请检查 GEMINI_API_KEY 是否有效。"
+    elif status_code == 429:
+        code = "rate_limited"
+        error_type = "rate_limit_error"
+        message = "模型供应商限流：请求过多或额度不足，请稍后重试。"
+    return LLMProviderError(
+        message=message,
+        code=code,
+        error_type=error_type,
+        status_code=status_code,
+        provider=provider,
+        retry_after_seconds=_retry_after_from_message(str(error.get("message") or "")),
+    )
 
 
 class ModelType(str, Enum):
@@ -41,12 +85,14 @@ class LLMClient:
     def __init__(
         self,
         api_key: str,
+        provider: str = "dashscope",
         base_url: Optional[str] = None,
         model_brain: str = "qwen-max",
         model_vision: str = "qwen-vl-max",
         model_chat: str = "qwen-plus",
         temperature: float = 0.7,
         max_tokens: int = 4096,
+        sdk_max_retries: int = 0,
     ) -> None:
         """
         Initialize LLM client with multi-model support.
@@ -60,9 +106,13 @@ class LLMClient:
             temperature: Default generation temperature.
             max_tokens: Default maximum response tokens.
         """
+        self.api_key_configured = bool(api_key)
+        self.api_key = api_key
+        self.provider = provider
         self.client = AsyncOpenAI(
             api_key=api_key,
             base_url=base_url,
+            max_retries=sdk_max_retries,
         )
         self.models = {
             ModelType.BRAIN: model_brain,
@@ -100,6 +150,21 @@ class LLMClient:
             dict containing 'content' and optionally 'tool_calls'.
         """
         model = self._get_model(model_type)
+        if not self.api_key_configured:
+            raise LLMProviderError(
+                message=f"未配置 {self.provider} API key。",
+                code="missing_api_key",
+                error_type="configuration_error",
+                provider=self.provider,
+            )
+
+        if self.provider == "gemini" and not tools:
+            return await self._gemini_native_chat(
+                messages=messages,
+                model=model,
+                temperature=temperature or self.temperature,
+                max_tokens=max_tokens or self.max_tokens,
+            )
         
         request_params = {
             "model": model,
@@ -153,8 +218,69 @@ class LLMClient:
             return result
             
         except Exception as e:
-            logger.error(f"LLM API error: {e}")
+            provider_error = classify_llm_exception(e, provider=self.provider)
+            logger.error(f"LLM API error: {provider_error}")
+            raise provider_error from e
+
+    async def _gemini_native_chat(
+        self,
+        *,
+        messages: list[dict[str, Any]],
+        model: str,
+        temperature: float,
+        max_tokens: int,
+    ) -> dict[str, Any]:
+        """Call Gemini's native REST API for non-tool text generation."""
+        system_parts: list[dict[str, str]] = []
+        contents: list[dict[str, Any]] = []
+
+        for message in messages:
+            content = message.get("content", "")
+            text = content if isinstance(content, str) else str(content)
+            if message.get("role") == "system":
+                system_parts.append({"text": text})
+                continue
+            role = "model" if message.get("role") == "assistant" else "user"
+            contents.append({"role": role, "parts": [{"text": text}]})
+
+        payload: dict[str, Any] = {
+            "contents": contents,
+            "generationConfig": {
+                "temperature": temperature,
+                "maxOutputTokens": max_tokens,
+            },
+        }
+        if system_parts:
+            payload["systemInstruction"] = {"parts": system_parts}
+
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+        try:
+            async with httpx.AsyncClient(timeout=60) as client:
+                response = await client.post(url, params={"key": self.api_key}, json=payload)
+            data = response.json()
+            if response.status_code >= 400:
+                raise _gemini_native_error(data, status_code=response.status_code, provider=self.provider)
+
+            candidate = (data.get("candidates") or [{}])[0]
+            parts = ((candidate.get("content") or {}).get("parts") or [])
+            content = "".join(part.get("text", "") for part in parts if isinstance(part, dict))
+            usage = data.get("usageMetadata") or {}
+            return {
+                "content": content,
+                "finish_reason": candidate.get("finishReason"),
+                "model": model,
+                "usage": {
+                    "prompt_tokens": usage.get("promptTokenCount", 0),
+                    "completion_tokens": usage.get("candidatesTokenCount", 0),
+                    "total_tokens": usage.get("totalTokenCount", 0),
+                },
+            }
+        except LLMProviderError:
             raise
+        except Exception as e:
+            provider_error = classify_llm_exception(e, provider=self.provider)
+            logger.error(f"Gemini native API error: {provider_error}")
+            raise provider_error from e
     
     async def plan(
         self,
@@ -286,6 +412,13 @@ class LLMClient:
             str: Content chunks as they arrive.
         """
         model = self._get_model(model_type)
+        if not self.api_key_configured:
+            raise LLMProviderError(
+                message=f"未配置 {self.provider} API key。",
+                code="missing_api_key",
+                error_type="configuration_error",
+                provider=self.provider,
+            )
         
         request_params = {
             "model": model,
@@ -305,12 +438,58 @@ class LLMClient:
                     yield chunk.choices[0].delta.content
                     
         except Exception as e:
-            logger.error(f"LLM stream error: {e}")
-            raise
+            provider_error = classify_llm_exception(e, provider=self.provider)
+            logger.error(f"LLM stream error: {provider_error}")
+            raise provider_error from e
 
 
 # Singleton client instance
 _llm_client: Optional[LLMClient] = None
+
+
+def resolve_llm_provider_settings(settings: Any) -> dict[str, str]:
+    """Resolve provider-specific OpenAI-compatible settings."""
+    provider = (getattr(settings, "llm_provider", "") or "bailian").lower()
+    base_url = settings.llm_base_url or None
+    model_brain = settings.llm_model_brain
+    model_vision = settings.llm_model_vision
+    model_chat = settings.llm_model_chat
+    api_key = settings.llm_api_key
+
+    if provider in {"gemini", "google", "google_ai"}:
+        provider = "gemini"
+        api_key = getattr(settings, "gemini_api_key", "")
+        if not base_url or "dashscope.aliyuncs.com" in base_url:
+            base_url = GEMINI_OPENAI_BASE_URL
+        if model_brain == "qwen-max":
+            model_brain = GEMINI_DEFAULT_MODEL
+        if model_vision == "qwen-vl-max":
+            model_vision = GEMINI_DEFAULT_MODEL
+        if model_chat == "qwen-plus":
+            model_chat = GEMINI_DEFAULT_MODEL
+    elif provider in {"bailian", "dashscope", "qwen"}:
+        provider = "dashscope"
+        if not base_url:
+            base_url = DASHSCOPE_DEFAULT_BASE_URL
+    elif provider in {"agnes", "agnes-ai", "agnes_ai"}:
+        provider = "agnes"
+        if not base_url:
+            base_url = AGNES_DEFAULT_BASE_URL
+        if model_brain == "qwen-max":
+            model_brain = AGNES_DEFAULT_MODEL
+        if model_vision == "qwen-vl-max":
+            model_vision = AGNES_DEFAULT_MODEL
+        if model_chat == "qwen-plus":
+            model_chat = AGNES_DEFAULT_MODEL
+
+    return {
+        "provider": provider,
+        "api_key": api_key,
+        "base_url": base_url or "",
+        "model_brain": model_brain,
+        "model_vision": model_vision,
+        "model_chat": model_chat,
+    }
 
 
 @lru_cache
@@ -324,13 +503,16 @@ def get_llm_client() -> LLMClient:
     global _llm_client
     if _llm_client is None:
         settings = get_settings()
+        provider_settings = resolve_llm_provider_settings(settings)
         _llm_client = LLMClient(
-            api_key=settings.llm_api_key,
-            base_url=settings.llm_base_url or None,
-            model_brain=settings.llm_model_brain,
-            model_vision=settings.llm_model_vision,
-            model_chat=settings.llm_model_chat,
+            api_key=provider_settings["api_key"],
+            provider=provider_settings["provider"],
+            base_url=provider_settings["base_url"] or None,
+            model_brain=provider_settings["model_brain"],
+            model_vision=provider_settings["model_vision"],
+            model_chat=provider_settings["model_chat"],
             temperature=settings.llm_temperature,
             max_tokens=settings.llm_max_tokens,
+            sdk_max_retries=settings.llm_sdk_max_retries,
         )
     return _llm_client

@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { path: "/strategy", label: "策略", icon: "⚡" },
   { path: "/planner", label: "历史", icon: "📚" },
   { path: "/chat", label: "AI 私教", icon: "🤖" },
+  { path: "/harness", label: "Harness", icon: "⌁" },
 ];
 
 export default function AppShell({ children }: { children: ReactNode }) {

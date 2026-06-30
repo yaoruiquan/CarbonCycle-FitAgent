@@ -42,10 +42,13 @@ class Settings(BaseSettings):
     database_url: str = "sqlite+aiosqlite:///./data/carboncycle.db"
     
     # LLM Configuration - Aliyun Bailian API
+    llm_provider: str = "bailian"
     llm_api_key: str = ""
+    gemini_api_key: str = ""
     llm_base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
     llm_temperature: float = 0.7
     llm_max_tokens: int = 4096
+    llm_sdk_max_retries: int = 0
     
     # Multi-Model Configuration
     llm_model_brain: str = "qwen-max"          # Complex planning, reasoning
@@ -64,6 +67,11 @@ class Settings(BaseSettings):
     # Agent Configuration
     agent_max_iterations: int = 10
     agent_reflection_threshold: float = 0.2  # 20% deviation triggers reflection
+
+    # Harness evaluation controls
+    harness_case_delay_seconds: float = 0
+    harness_rate_limit_retry_count: int = 2
+    harness_rate_limit_retry_delay_seconds: float = 20
 
 
 @lru_cache

@@ -1,0 +1,83 @@
+{
+  "run_id": "58144728-e2f0-4ab4-9e2e-c36383b22755",
+  "created_at": "2026-06-30T10:22:00.547158",
+  "total": 1,
+  "passed": 1,
+  "failed": 0,
+  "pass_rate": 1.0,
+  "average_harness_score": 100.0,
+  "average_dimension_scores": {
+    "safety_score": 100.0,
+    "task_success_score": 100.0,
+    "tool_use_score": 100.0,
+    "actionability_score": 100.0,
+    "stability_score": 100.0,
+    "observability_score": 100.0
+  },
+  "category_summary": {
+    "data_quality": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "average_harness_score": 100.0
+    }
+  },
+  "difficulty_summary": {
+    "smoke": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "average_harness_score": 100.0
+    }
+  },
+  "results": [
+    {
+      "case_id": "no_logs_checkin",
+      "title": "无日志时保持轻量跟踪",
+      "category": "data_quality",
+      "difficulty": "smoke",
+      "tags": [
+        "missing_logs",
+        "checkin"
+      ],
+      "passed": true,
+      "failures": [],
+      "expectation_failures": [],
+      "hard_failures": [],
+      "run_id": "513c03ef-23df-4c08-8259-63f5aa5dd9f2",
+      "status": "success",
+      "verification_status": "passed",
+      "harness_score": 100,
+      "agent_harness_score": 100,
+      "dimension_scores": {
+        "safety_score": 100,
+        "task_success_score": 100,
+        "tool_use_score": 100,
+        "actionability_score": 100,
+        "stability_score": 100,
+        "observability_score": 100
+      },
+      "error": null,
+      "model_status": {
+        "available": true,
+        "provider": "gemini"
+      },
+      "verification_findings": [],
+      "summary": {
+        "trace_count": 3,
+        "tool_call_count": 1,
+        "warning_rules": [],
+        "tool_names": [
+          "actor_tool_loop"
+        ],
+        "action_types": [],
+        "trace_nodes": [
+          "planner",
+          "actor",
+          "verifier"
+        ]
+      },
+      "retry_count": 2
+    }
+  ]
+}

@@ -52,6 +52,7 @@ def _parse_date(value: Any) -> Optional[date]:
 
 def _model_to_dict(run: AgentRunModel) -> dict[str, Any]:
     """Serialize an AgentRunModel and related steps."""
+    evaluation_summary = run.evaluation_summary or {}
     return {
         "run_id": run.id,
         "user_id": run.user_id,
@@ -86,7 +87,12 @@ def _model_to_dict(run: AgentRunModel) -> dict[str, Any]:
         "safety_warnings": run.safety_warnings or [],
         "action_cards": run.action_cards or [],
         "memory_context": run.memory_context or {},
-        "evaluation_summary": run.evaluation_summary or {},
+        "evaluation_summary": evaluation_summary,
+        "model_status": evaluation_summary.get("model_status", {}),
+        "verification_status": evaluation_summary.get("verification_status"),
+        "verification_findings": evaluation_summary.get("verification_findings", []),
+        "harness_score": evaluation_summary.get("harness_score", 0),
+        "harness_episode": evaluation_summary.get("harness_episode", {}),
         "error": run.error,
         "started_at": run.started_at.isoformat() if run.started_at else None,
         "completed_at": run.completed_at.isoformat() if run.completed_at else None,
@@ -198,6 +204,16 @@ class AgentObservabilityService:
         """Persist an agent result and return the serialized run."""
         run_id = result.get("run_id") or str(uuid4())
         trace = result.get("trace") or []
+        evaluation_summary = {
+            **(result.get("evaluation_summary") or {}),
+            "verification_status": result.get("verification_status"),
+            "verification_findings": result.get("verification_findings") or [],
+            "harness_score": result.get("harness_score", 0),
+            "model_status": result.get("model_status") or {},
+            "harness_episode": result.get("harness_episode")
+            or (result.get("evaluation_summary") or {}).get("harness_episode")
+            or {},
+        }
         run = AgentRunModel(
             id=run_id,
             user_id=user_id,
@@ -216,7 +232,7 @@ class AgentObservabilityService:
             safety_warnings=result.get("safety_warnings") or [],
             action_cards=result.get("action_cards") or [],
             memory_context=result.get("memory_context") or {},
-            evaluation_summary=result.get("evaluation_summary") or {},
+            evaluation_summary=evaluation_summary,
             error=result.get("error"),
             completed_at=datetime.now(),
         )

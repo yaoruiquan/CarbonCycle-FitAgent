@@ -20,7 +20,9 @@ from app.agent.trace import (
     start_timer,
 )
 from app.core.logging import get_logger, log_agent_decision
+from app.harness.tool_policy import ToolPermission, ToolPolicy
 from app.llm.client import get_llm_client, ModelType
+from app.llm.errors import LLMProviderError, classify_llm_exception
 from app.llm.tools import get_tool_definitions
 
 logger = get_logger(__name__)
@@ -76,6 +78,7 @@ async def _run_tool_calling_loop(
     llm = get_llm_client()
     tools = get_tool_definitions(tool_names)
     executor = ToolExecutor(db_session)
+    policy = ToolPolicy()
     traces: list[dict[str, Any]] = []
 
     for iteration in range(MAX_TOOL_ITERATIONS):
@@ -116,6 +119,70 @@ async def _run_tool_calling_loop(
             except json.JSONDecodeError:
                 func_args = {}
 
+            decision = policy.decide(func_name, func_args)
+            permission = decision["permission"]
+            if permission == ToolPermission.BLOCKED.value:
+                parsed_result = {"error": "tool_blocked", "message": decision["reason"]}
+                traces.append(
+                    make_tool_trace(
+                        tool_name=func_name,
+                        arguments=func_args,
+                        result=parsed_result,
+                        status="error",
+                        elapsed_ms=0,
+                        error=parsed_result["message"],
+                        permission=permission,
+                        policy_decision=decision["policy_decision"],
+                        policy_version=decision["policy_version"],
+                    )
+                )
+                messages.append({
+                    "role": "tool",
+                    "tool_call_id": tc["id"],
+                    "content": json.dumps(parsed_result, ensure_ascii=False),
+                })
+                continue
+            if permission == ToolPermission.CONFIRM.value:
+                parsed_result = {"requires_confirmation": True, "message": decision["reason"]}
+                traces.append(
+                    make_tool_trace(
+                        tool_name=func_name,
+                        arguments=func_args,
+                        result=parsed_result,
+                        status="requires_confirmation",
+                        elapsed_ms=0,
+                        permission=permission,
+                        policy_decision=decision["policy_decision"],
+                        policy_version=decision["policy_version"],
+                    )
+                )
+                messages.append({
+                    "role": "tool",
+                    "tool_call_id": tc["id"],
+                    "content": json.dumps(parsed_result, ensure_ascii=False),
+                })
+                continue
+            if permission == ToolPermission.DRY_RUN.value:
+                parsed_result = {"dry_run": True, "message": decision["reason"]}
+                traces.append(
+                    make_tool_trace(
+                        tool_name=func_name,
+                        arguments=func_args,
+                        result=parsed_result,
+                        status="dry_run",
+                        elapsed_ms=0,
+                        permission=permission,
+                        policy_decision=decision["policy_decision"],
+                        policy_version=decision["policy_version"],
+                    )
+                )
+                messages.append({
+                    "role": "tool",
+                    "tool_call_id": tc["id"],
+                    "content": json.dumps(parsed_result, ensure_ascii=False),
+                })
+                continue
+
             logger.info(f"Executing tool: {func_name}({json.dumps(func_args, ensure_ascii=False)[:200]})")
             tool_started = start_timer()[1]
             result = await executor.execute(func_name, func_args)
@@ -131,6 +198,9 @@ async def _run_tool_calling_loop(
                     status="error" if isinstance(parsed_result, dict) and parsed_result.get("error") else "success",
                     elapsed_ms=duration_ms(tool_started),
                     error=parsed_result.get("error") if isinstance(parsed_result, dict) else None,
+                    permission=permission,
+                    policy_decision=decision["policy_decision"],
+                    policy_version=decision["policy_version"],
                 )
             )
 
@@ -168,6 +238,7 @@ async def act_node(state: AgentState) -> dict[str, Any]:
     db_session = state.get("db_session")
     tool_analysis = None
     tool_traces: list[dict[str, Any]] = []
+    result_model_status: Optional[dict[str, Any]] = None
 
     if db_session and state.get("user"):
         user = state["user"]
@@ -200,7 +271,8 @@ async def act_node(state: AgentState) -> dict[str, Any]:
             tool_analysis = response.get("content")
             logger.info("Actor tool calling analysis completed")
         except Exception as e:
-            logger.warning(f"Tool calling analysis failed, using basic parsing: {e}")
+            provider_error = e if isinstance(e, LLMProviderError) else classify_llm_exception(e)
+            logger.warning(f"Tool calling analysis failed, using basic parsing: {provider_error}")
             tool_traces.append(
                 make_tool_trace(
                     tool_name="actor_tool_loop",
@@ -208,9 +280,15 @@ async def act_node(state: AgentState) -> dict[str, Any]:
                     result={},
                     status="error",
                     elapsed_ms=0,
-                    error=str(e),
+                    error=provider_error.message,
+                    permission="auto",
+                    policy_decision="allowed",
+                    policy_version=ToolPolicy.version,
                 )
             )
+            result_model_status = None
+        else:
+            result_model_status = None
 
     log_agent_decision(
         logger,
@@ -223,6 +301,10 @@ async def act_node(state: AgentState) -> dict[str, Any]:
     result = {"actor_output": parsed}
     if tool_analysis:
         result["actor_output"]["tool_analysis"] = tool_analysis
+    if result_model_status and not state.get("model_status", {}).get("available", True):
+        result["model_status"] = state.get("model_status")
+    elif result_model_status:
+        result["model_status"] = result_model_status
     result["trace"] = append_trace(
         state,
         make_step_trace(

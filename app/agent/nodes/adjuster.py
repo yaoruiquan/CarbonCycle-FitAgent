@@ -16,6 +16,7 @@ from uuid import uuid4
 from app.agent.state import AgentState, AdjustmentResult
 from app.agent.trace import append_trace, duration_ms, make_step_trace, start_timer
 from app.core.logging import get_logger, log_agent_decision
+from app.harness.safety_policy import NutritionSafetyPolicy
 from app.llm.client import get_llm_client
 from app.rag.retriever import retrieve_context
 
@@ -93,44 +94,12 @@ def _build_safety_warnings(
     reflection: dict[str, Any],
 ) -> list[dict[str, str]]:
     """Apply nutrition guardrails to proposed changes."""
-    warnings: list[dict[str, str]] = []
-    current_calories = _target_calories(plan)
-    proposed_calories = next(
-        (float(item["after"]) for item in plan_diff if item.get("field") == "target_calories"),
-        current_calories,
+    return NutritionSafetyPolicy().warnings(
+        user=user,
+        plan=plan,
+        plan_diff=plan_diff,
+        reflection=reflection,
     )
-    tdee = float(user.get("tdee", 0) or 0)
-    weight = float(user.get("weight_kg", 0) or 0)
-    protein_target = next(
-        (float(item["after"]) for item in plan_diff if item.get("field") == "target_protein"),
-        float(plan.get("target_protein", 0) or 0),
-    )
-
-    if proposed_calories and proposed_calories < 1200:
-        warnings.append({
-            "level": "danger",
-            "message": "建议热量低于 1200 kcal，已限制为安全下限，避免极端节食。",
-            "rule": "minimum_calorie_floor",
-        })
-    if tdee and proposed_calories and (tdee - proposed_calories) / tdee > 0.35:
-        warnings.append({
-            "level": "warning",
-            "message": "建议热量缺口超过 TDEE 的 35%，需要谨慎执行并观察恢复状态。",
-            "rule": "deficit_cap",
-        })
-    if weight and protein_target and protein_target / weight < 1.2:
-        warnings.append({
-            "level": "warning",
-            "message": "蛋白质目标低于 1.2g/kg，可能影响训练恢复和保肌。",
-            "rule": "protein_floor",
-        })
-    if reflection.get("calorie_deviation_pct", 0) < -25:
-        warnings.append({
-            "level": "info",
-            "message": "今日摄入明显不足，Agent 会优先建议补足营养而不是继续降低热量。",
-            "rule": "under_eating_recovery",
-        })
-    return warnings
 
 
 def _build_missions(
@@ -205,6 +174,14 @@ def _build_action_cards(
         "confirmation_required": False,
     })
     return cards
+
+
+def _has_calorie_adjustment_pattern(patterns: list[str]) -> bool:
+    """Return whether a reflection pattern justifies changing plan macros."""
+    return any(
+        pattern in {"持续热量超标", "热量摄入不足", "趋势恶化"}
+        for pattern in patterns
+    )
 
 
 async def _generate_smart_suggestions(
@@ -347,9 +324,13 @@ async def adjust_node(state: AgentState) -> dict[str, Any]:
     severity = reflection.get("severity", "minor")
     cal_dev = reflection.get("calorie_deviation_pct", 0)
     patterns = reflection.get("patterns", [])
+    has_calorie_adjustment = _has_calorie_adjustment_pattern(patterns)
     
     # Calculate adjustment
-    if severity == "significant":
+    if not has_calorie_adjustment:
+        adj_type = "mission"
+        cal_adj = 0
+    elif severity == "significant":
         adj_type = "significant"
         cal_adj = -cal_dev * 0.5  # Correct 50% of deviation
     elif severity == "moderate":

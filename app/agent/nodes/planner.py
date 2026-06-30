@@ -16,6 +16,7 @@ from app.agent.state import AgentState
 from app.agent.trace import append_trace, duration_ms, make_step_trace, start_timer
 from app.core.logging import get_logger, log_agent_decision
 from app.llm.client import get_llm_client
+from app.llm.errors import LLMProviderError
 from app.rag.retriever import retrieve_context
 
 logger = get_logger(__name__)
@@ -93,6 +94,7 @@ async def plan_node(state: AgentState) -> dict[str, Any]:
     started_at, started = start_timer()
     
     user = state.get("user", {})
+    plan = state.get("plan", {})
     goal = user.get("goal", "fat_loss")
     
     # RAG: Retrieve relevant knowledge based on user goal
@@ -161,11 +163,13 @@ async def plan_node(state: AgentState) -> dict[str, Any]:
             ),
         }
         
-    except Exception as e:
-        logger.error(f"Planner node error: {e}")
+    except LLMProviderError as provider_error:
+        model_status = provider_error.to_dict()
+        logger.error(f"Planner node error: {provider_error}")
         return {
-            "planner_output": {"status": "error", "error": str(e)},
-            "error": str(e),
+            "planner_output": {"status": "error", "error": provider_error.message, "provider_error": model_status},
+            "error": provider_error.message,
+            "model_status": model_status,
             "trace": append_trace(
                 state,
                 make_step_trace(
@@ -173,9 +177,31 @@ async def plan_node(state: AgentState) -> dict[str, Any]:
                     title="计划生成",
                     status="error",
                     decision="planner_failed",
-                    reasoning=str(e),
+                    reasoning=provider_error.message,
                     input_summary={"goal": goal},
-                    output_summary={"error": str(e)},
+                    output_summary={"error": provider_error.message, "code": provider_error.code},
+                    confidence=0,
+                    started_at=started_at,
+                    elapsed_ms=duration_ms(started),
+                ),
+            ),
+        }
+    except Exception as e:
+        logger.exception(f"Planner node runtime error: {e}")
+        error_message = str(e)
+        return {
+            "planner_output": {"status": "error", "error": error_message},
+            "error": error_message,
+            "trace": append_trace(
+                state,
+                make_step_trace(
+                    node="planner",
+                    title="计划生成",
+                    status="error",
+                    decision="planner_failed",
+                    reasoning=error_message,
+                    input_summary={"goal": goal},
+                    output_summary={"error": error_message, "code": "planner_runtime_error"},
                     confidence=0,
                     started_at=started_at,
                     elapsed_ms=duration_ms(started),

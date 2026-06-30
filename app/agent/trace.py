@@ -63,9 +63,12 @@ def make_tool_trace(
     status: str = "success",
     elapsed_ms: int = 0,
     error: Optional[str] = None,
+    permission: Optional[str] = None,
+    policy_decision: Optional[str] = None,
+    policy_version: Optional[str] = None,
 ) -> ToolTrace:
     """Build a trace entry for a function/tool call."""
-    return {
+    trace: ToolTrace = {
         "tool_name": tool_name,
         "arguments": arguments,
         "result": result or {},
@@ -73,6 +76,13 @@ def make_tool_trace(
         "duration_ms": elapsed_ms,
         "error": error,
     }
+    if permission:
+        trace["permission"] = permission
+    if policy_decision:
+        trace["policy_decision"] = policy_decision
+    if policy_version:
+        trace["policy_version"] = policy_version
+    return trace
 
 
 def append_trace(state: dict[str, Any], trace: AgentStepTrace) -> list[AgentStepTrace]:

@@ -1,0 +1,88 @@
+{
+  "run_id": "1a7ca1c6-67bb-4965-ae77-dd5ef8737f8f",
+  "created_at": "2026-06-30T16:29:34.615680",
+  "total": 1,
+  "passed": 1,
+  "failed": 0,
+  "pass_rate": 1.0,
+  "average_harness_score": 100.0,
+  "average_dimension_scores": {
+    "safety_score": 100.0,
+    "task_success_score": 100.0,
+    "tool_use_score": 100.0,
+    "actionability_score": 100.0,
+    "stability_score": 100.0,
+    "observability_score": 100.0
+  },
+  "category_summary": {
+    "nutrition_deviation": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "average_harness_score": 100.0
+    }
+  },
+  "difficulty_summary": {
+    "smoke": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "average_harness_score": 100.0
+    }
+  },
+  "results": [
+    {
+      "case_id": "protein_deficit",
+      "title": "蛋白质摄入不足后的任务生成",
+      "category": "nutrition_deviation",
+      "difficulty": "smoke",
+      "tags": [
+        "protein_deficit",
+        "mission_creation"
+      ],
+      "passed": true,
+      "failures": [],
+      "expectation_failures": [],
+      "hard_failures": [],
+      "run_id": "bf66ecac-db8b-4b4f-86d4-262b28b0449e",
+      "status": "success",
+      "verification_status": "passed",
+      "harness_score": 100,
+      "agent_harness_score": 100,
+      "dimension_scores": {
+        "safety_score": 100,
+        "task_success_score": 100,
+        "tool_use_score": 100,
+        "actionability_score": 100,
+        "stability_score": 100,
+        "observability_score": 100
+      },
+      "error": null,
+      "model_status": {
+        "available": true,
+        "provider": "agnes"
+      },
+      "verification_findings": [],
+      "summary": {
+        "trace_count": 5,
+        "tool_call_count": 2,
+        "warning_rules": [],
+        "tool_names": [
+          "analyze_deviation",
+          "suggest_adjustment"
+        ],
+        "action_types": [
+          "create_missions",
+          "open_agent_trace"
+        ],
+        "trace_nodes": [
+          "planner",
+          "actor",
+          "reflector",
+          "adjuster",
+          "verifier"
+        ]
+      }
+    }
+  ]
+}

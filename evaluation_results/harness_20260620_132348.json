@@ -1,0 +1,30 @@
+{
+  "run_id": "eda34e96-30fd-40b6-ba9d-feb7bdfdf0f7",
+  "created_at": "2026-06-20T13:23:48.942652",
+  "total": 1,
+  "passed": 0,
+  "failed": 1,
+  "pass_rate": 0.0,
+  "average_harness_score": 0.0,
+  "results": [
+    {
+      "case_id": "no_logs_checkin",
+      "title": "无日志时保持轻量跟踪",
+      "passed": false,
+      "failures": [
+        "Expected verification_status=passed, got ",
+        "Harness score below minimum: 0 < 70"
+      ],
+      "run_id": "3f91b369-0fb5-4428-b02d-98a90c24070f",
+      "status": "success",
+      "verification_status": "",
+      "harness_score": 0,
+      "summary": {
+        "trace_count": 2,
+        "tool_call_count": 1,
+        "warning_rules": [],
+        "action_types": []
+      }
+    }
+  ]
+}
